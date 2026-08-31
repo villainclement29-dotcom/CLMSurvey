@@ -5,7 +5,7 @@ import os
 import trafilatura
 from google import genai
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-flash-latest"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
 
