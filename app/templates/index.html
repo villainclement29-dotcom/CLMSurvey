@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veille scientifique</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Veille scientifique</h1>
+    <form method="post" action="/refresh">
+      <button type="submit">Rafraîchir</button>
+    </form>
+  </header>
+
+  {% if refreshed is not none %}
+  <p class="flash">{{ refreshed }} nouvel(le/aux) article(s) ajouté(s).</p>
+  {% endif %}
+
+  <nav class="filters">
+    {% for cat in categories %}
+      <a href="/?category={{ cat }}" class="{{ 'active' if cat == selected else '' }}">
+        {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %}
+        {{ cat }}<span class="count">{{ counts.get(cat, 0) }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+
+  {% for label, group_items in groups %}
+    <h2 class="date-heading">{{ label }}</h2>
+    <ul class="items">
+      {% for item in group_items %}
+      <li>
+        <a class="item" data-category="{{ item.category }}" href="{{ item.url }}" target="_blank" rel="noopener">
+          <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
+          <span class="title">{{ item.title }}</span>
+          <span class="meta">
+            <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
+            {{ item.source }}
+          </span>
+          {% if item.summary %}
+          <span class="summary">{{ item.summary }}</span>
+          {% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">Aucun article pour l'instant. Cliquez sur "Rafraîchir" pour lancer une première collecte.</p>
+  {% endfor %}
+
+  {% if has_more %}
+  <a class="load-more" href="/?category={{ selected }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
+  {% endif %}
+</body>
+</html>

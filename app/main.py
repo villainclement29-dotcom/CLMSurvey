@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+from typing import Optional
+from urllib.parse import urlparse
+
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from app.collector import run_collection
+from app.config import CATEGORIES, CATEGORY_ICONS
+from app.db import count_by_category, get_conn, init_db, list_items
+from app.formatting import group_by_date
+
+app = FastAPI(title="Veille scientifique")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+templates = Jinja2Templates(directory="app/templates")
+
+
+def favicon_url(article_url: str) -> str:
+    domain = urlparse(article_url).netloc
+    return f"https://www.google.com/s2/favicons?sz=32&domain={domain}"
+
+
+templates.env.filters["favicon"] = favicon_url
+
+init_db()
+
+PAGE_SIZE = 60
+
+
+@app.get("/")
+def index(request: Request, category: str = "Toutes", refreshed: Optional[int] = None, limit: int = PAGE_SIZE):
+    with get_conn() as conn:
+        items = list_items(conn, category, limit=limit + 1)
+        counts = count_by_category(conn)
+    has_more = len(items) > limit
+    items = items[:limit]
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "groups": group_by_date(items),
+            "categories": ["Toutes"] + CATEGORIES,
+            "counts": counts,
+            "selected": category,
+            "refreshed": refreshed,
+            "limit": limit,
+            "page_size": PAGE_SIZE,
+            "has_more": has_more,
+            "cat_icons": CATEGORY_ICONS,
+        },
+    )
+
+
+@app.post("/refresh")
+def refresh():
+    new_count = run_collection()
+    return RedirectResponse(url=f"/?refreshed={new_count}", status_code=303)
