@@ -10,8 +10,8 @@ from google.genai import errors as genai_errors
 MODEL = "gemini-flash-latest"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
-MAX_RETRIES = 3
-RETRY_DELAY_SECONDS = 2
+MAX_RETRIES = 2
+RETRY_DELAY_SECONDS = 1
 
 PROMPT_TEMPLATE = """Résume cet article en français, en 4 à 6 phrases claires \
 et accessibles, pour quelqu'un qui n'a pas le temps de le lire en entier. \

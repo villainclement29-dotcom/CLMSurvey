@@ -7,6 +7,5 @@
     }
   ],
   "routes": [{ "src": "/(.*)", "dest": "api/index.py" }],
-  "crons": [{ "path": "/cron", "schedule": "0 7 * * *" }],
-  "functions": { "api/index.py": { "maxDuration": 30 } }
+  "crons": [{ "path": "/cron", "schedule": "0 7 * * *" }]
 }
