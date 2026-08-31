@@ -9,7 +9,7 @@ from google.genai import errors as genai_errors
 
 MODEL = "gemini-flash-latest"
 MAX_ARTICLE_CHARS = 8000
-MAX_SUMMARY_TOKENS = 400
+MAX_SUMMARY_TOKENS = 600
 MAX_RETRIES = 2
 RETRY_DELAY_SECONDS = 1
 
@@ -52,7 +52,10 @@ def generate_summary(title: str, url: str, fallback_text: str) -> str:
             response = client.models.generate_content(
                 model=MODEL,
                 contents=prompt,
-                config={"max_output_tokens": MAX_SUMMARY_TOKENS},
+                config={
+                    "max_output_tokens": MAX_SUMMARY_TOKENS,
+                    "thinking_config": {"thinking_budget": 0},
+                },
             )
             return response.text.strip()
         except genai_errors.ServerError as exc:
