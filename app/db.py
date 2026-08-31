@@ -165,23 +165,52 @@ def set_favorite_folder(conn, item_id: int, folder_id: int | None):
     conn.commit()
 
 
-def create_folder(conn, name: str):
-    if not conn.execute("SELECT 1 FROM folders WHERE name = ?", (name,)):
-        conn.execute("INSERT INTO folders (name) VALUES (?)", (name,))
+def create_folder(conn, name: str) -> int:
+    existing = conn.execute("SELECT id FROM folders WHERE name = ?", (name,))
+    if existing:
+        return existing[0]["id"]
+    rows = conn.execute("INSERT INTO folders (name) VALUES (?) RETURNING id", (name,))
     conn.commit()
+    return rows[0]["id"]
+
+
+def get_folder(conn, folder_id: int):
+    rows = conn.execute("SELECT * FROM folders WHERE id = ?", (folder_id,))
+    return rows[0] if rows else None
 
 
 def list_folders(conn):
     return conn.execute("SELECT * FROM folders ORDER BY name")
 
 
-def list_favorites(conn):
-    """Retourne les favoris (avec les infos de l'article), les plus récents en premier."""
-    return conn.execute(
-        """
+def count_favorites_by_folder(conn) -> dict:
+    """Retourne {folder_id: nombre d'articles}, avec la clé None pour les non classés."""
+    rows = conn.execute("SELECT folder_id, COUNT(*) AS n FROM favorites GROUP BY folder_id")
+    return {row["folder_id"]: row["n"] for row in rows}
+
+
+def list_favorites(conn, folder_id: int | None = None, only_unclassified: bool = False):
+    """Retourne les favoris (avec les infos de l'article), les plus récents en premier.
+    Sans filtre : tous les favoris. folder_id : ceux de ce dossier.
+    only_unclassified=True : ceux sans dossier."""
+    query = """
         SELECT items.*, favorites.folder_id AS folder_id
         FROM favorites
         JOIN items ON items.id = favorites.item_id
-        ORDER BY favorites.created_at DESC
-        """
-    )
+    """
+    if only_unclassified:
+        query += " WHERE favorites.folder_id IS NULL"
+        params = ()
+    elif folder_id is not None:
+        query += " WHERE favorites.folder_id = ?"
+        params = (folder_id,)
+    else:
+        params = ()
+    query += " ORDER BY favorites.created_at DESC"
+    return conn.execute(query, params)
+
+
+def assign_favorites_to_folder(conn, item_ids: list[int], folder_id: int):
+    for item_id in item_ids:
+        conn.execute("UPDATE favorites SET folder_id = ? WHERE item_id = ?", (folder_id, item_id))
+    conn.commit()

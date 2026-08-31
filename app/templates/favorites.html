@@ -12,43 +12,89 @@
     <a class="favorites-link" href="/">← Accueil</a>
   </header>
 
-  <form method="post" action="/folders" class="new-folder-form">
-    <input type="text" name="name" placeholder="Nom du nouveau dossier…" maxlength="60" required>
-    <button type="submit">Créer un dossier</button>
-  </form>
+  <button type="button" id="open-folder-modal-btn" class="new-folder-btn">+ Nouveau dossier</button>
 
-  {% for label, folder_id, favs in groups %}
-    <h2 class="date-heading">{{ label }} <span class="count">{{ favs|length }}</span></h2>
-    {% if favs %}
-    <ul class="items">
-      {% for item in favs %}
-      <li class="item-wrapper">
-        <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
-          <input type="hidden" name="next" value="/favorites">
-          <button type="submit" class="fav-btn active" title="Retirer des favoris">★</button>
-        </form>
-        <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
-          <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
-          <span class="title">{{ item.title }}</span>
-          <span class="meta">
-            <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
-            {{ item.source }} · {{ item.published_at | date }}
-          </span>
-        </a>
-        <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-select-form">
-          <select name="folder_id" onchange="this.form.submit()">
-            <option value="none" {{ 'selected' if folder_id is none else '' }}>Non classé</option>
-            {% for f in folders %}
-            <option value="{{ f.id }}" {{ 'selected' if f.id == folder_id else '' }}>{{ f.name }}</option>
+  <div class="folder-list">
+    <a class="folder-row" href="/favorites/unclassified">
+      <span class="folder-icon">🗂️</span>
+      <span class="folder-name">Non classés</span>
+      <span class="folder-count">{{ unclassified_items|length }}</span>
+      <span class="folder-chevron">›</span>
+    </a>
+    {% for f in folders %}
+    <a class="folder-row" href="/favorites/folder/{{ f.id }}">
+      <span class="folder-icon">📁</span>
+      <span class="folder-name">{{ f.name }}</span>
+      <span class="folder-count">{{ counts.get(f.id, 0) }}</span>
+      <span class="folder-chevron">›</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if not folders %}
+  <p class="empty">Aucun dossier pour l'instant. Créez-en un pour organiser vos favoris.</p>
+  {% endif %}
+
+  <div id="folder-modal-backdrop" class="modal-backdrop" hidden>
+    <div class="modal">
+      <button type="button" class="modal-close" id="modal-close-btn" aria-label="Fermer">&times;</button>
+      <form method="post" action="/folders" id="folder-form">
+        <div id="modal-step-1">
+          <h2>Nouveau dossier</h2>
+          <input type="text" name="name" id="folder-name-input" placeholder="Nom du dossier" maxlength="60" required>
+          <button type="button" id="modal-next-btn">Créer le dossier</button>
+        </div>
+        <div id="modal-step-2" hidden>
+          <h2>Ajouter des favoris à ce dossier ?</h2>
+          {% if unclassified_items %}
+          <ul class="modal-checklist">
+            {% for item in unclassified_items %}
+            <li>
+              <label>
+                <input type="checkbox" name="item_ids" value="{{ item.id }}">
+                {{ item.title }}
+              </label>
+            </li>
             {% endfor %}
-          </select>
-        </form>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p class="empty">Aucun article dans ce dossier pour l'instant.</p>
-    {% endif %}
-  {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">Aucun favori non classé à ajouter.</p>
+          {% endif %}
+          <div class="modal-actions">
+            <button type="submit" class="secondary">Ignorer</button>
+            <button type="submit">Suivant</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const backdrop = document.getElementById("folder-modal-backdrop");
+    const openBtn = document.getElementById("open-folder-modal-btn");
+    const closeBtn = document.getElementById("modal-close-btn");
+    const nextBtn = document.getElementById("modal-next-btn");
+    const step1 = document.getElementById("modal-step-1");
+    const step2 = document.getElementById("modal-step-2");
+    const nameInput = document.getElementById("folder-name-input");
+
+    function openModal() {
+      step1.hidden = false;
+      step2.hidden = true;
+      nameInput.value = "";
+      backdrop.hidden = false;
+      nameInput.focus();
+    }
+    function closeModal() { backdrop.hidden = true; }
+
+    openBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
+    nextBtn.addEventListener("click", () => {
+      if (!nameInput.value.trim()) { nameInput.focus(); return; }
+      step1.hidden = true;
+      step2.hidden = false;
+    });
+  </script>
 </body>
 </html>

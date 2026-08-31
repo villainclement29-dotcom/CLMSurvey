@@ -14,10 +14,13 @@ from app.collector import run_collection
 from app.config import CATEGORIES, CATEGORY_ICONS
 from app.db import (
     add_favorite,
+    assign_favorites_to_folder,
     count_by_category,
+    count_favorites_by_folder,
     create_folder,
     favorited_item_ids,
     get_conn,
+    get_folder,
     get_item,
     init_db,
     is_favorited,
@@ -110,42 +113,81 @@ def toggle_favorite(item_id: int, next: str = Form("/")):
 
 @app.get("/favorites")
 def favorites_page(request: Request):
+    """Page de listing des dossiers (façon appli Notes)."""
     with get_conn() as conn:
         folders = list_folders(conn)
-        favorites = list_favorites(conn)
-    by_folder = {f["id"]: [] for f in folders}
-    unclassified = []
-    for fav in favorites:
-        bucket = by_folder.get(fav["folder_id"])
-        (bucket if bucket is not None else unclassified).append(fav)
-    groups = [(f["name"], f["id"], by_folder[f["id"]]) for f in folders]
-    groups.append(("Non classés", None, unclassified))
+        counts = count_favorites_by_folder(conn)
+        unclassified_items = list_favorites(conn, only_unclassified=True)
     return templates.TemplateResponse(
         "favorites.html",
         {
             "request": request,
-            "groups": groups,
             "folders": folders,
+            "counts": counts,
+            "unclassified_items": unclassified_items,
+        },
+    )
+
+
+@app.get("/favorites/unclassified")
+def favorites_unclassified(request: Request):
+    with get_conn() as conn:
+        items = list_favorites(conn, only_unclassified=True)
+        folders = list_folders(conn)
+    return templates.TemplateResponse(
+        "favorites_list.html",
+        {
+            "request": request,
+            "title": "Non classés",
+            "items": items,
+            "folders": folders,
+            "current_folder_id": None,
             "cat_icons": CATEGORY_ICONS,
+            "next": "/favorites/unclassified",
+        },
+    )
+
+
+@app.get("/favorites/folder/{folder_id}")
+def favorites_folder(request: Request, folder_id: int):
+    with get_conn() as conn:
+        folder = get_folder(conn, folder_id)
+        if folder is None:
+            raise HTTPException(status_code=404, detail="Dossier introuvable")
+        items = list_favorites(conn, folder_id=folder_id)
+        folders = list_folders(conn)
+    return templates.TemplateResponse(
+        "favorites_list.html",
+        {
+            "request": request,
+            "title": folder["name"],
+            "items": items,
+            "folders": folders,
+            "current_folder_id": folder_id,
+            "cat_icons": CATEGORY_ICONS,
+            "next": f"/favorites/folder/{folder_id}",
         },
     )
 
 
 @app.post("/folders")
-def create_folder_route(name: str = Form(...)):
+def create_folder_route(name: str = Form(...), item_ids: list[int] = Form(default=[])):
     name = name.strip()
-    if name:
-        with get_conn() as conn:
-            create_folder(conn, name)
-    return RedirectResponse(url="/favorites", status_code=303)
+    if not name:
+        return RedirectResponse(url="/favorites", status_code=303)
+    with get_conn() as conn:
+        folder_id = create_folder(conn, name)
+        if item_ids:
+            assign_favorites_to_folder(conn, item_ids, folder_id)
+    return RedirectResponse(url=f"/favorites/folder/{folder_id}", status_code=303)
 
 
 @app.post("/favorites/{item_id}/folder")
-def assign_favorite_folder(item_id: int, folder_id: str = Form(...)):
+def assign_favorite_folder(item_id: int, folder_id: str = Form(...), next: str = Form("/favorites")):
     fid = int(folder_id) if folder_id and folder_id != "none" else None
     with get_conn() as conn:
         set_favorite_folder(conn, item_id, fid)
-    return RedirectResponse(url="/favorites", status_code=303)
+    return RedirectResponse(url=next, status_code=303)
 
 
 @app.get("/api/summary/{item_id}")
