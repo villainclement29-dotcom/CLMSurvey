@@ -64,6 +64,19 @@ def score_item(item) -> float:
     return score
 
 
+def count_relevant_by_category(items) -> dict:
+    """Retourne {catégorie: nombre d'articles pertinents (score > MIN_SCORE)},
+    plus la clé 'Toutes' pour le total. Sert à afficher, sur les filtres,
+    le nombre réellement affiché plutôt que le total brut en base."""
+    counts: dict = {}
+    for item in items:
+        if score_item(item) <= MIN_SCORE:
+            continue
+        counts[item["category"]] = counts.get(item["category"], 0) + 1
+    counts["Toutes"] = sum(counts.values())
+    return counts
+
+
 def rank_and_cap(groups, max_per_group: int = 10):
     """Prend la sortie de group_by_date (label, items) et retourne
     (label, items_conservés, total_avant_plafond) en ne gardant que les

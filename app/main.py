@@ -15,7 +15,6 @@ from app.config import CATEGORIES, CATEGORY_ICONS
 from app.db import (
     add_favorite,
     assign_favorites_to_folder,
-    count_by_category,
     count_favorites_by_folder,
     create_folder,
     favorited_item_ids,
@@ -32,7 +31,7 @@ from app.db import (
     set_favorite_folder,
 )
 from app.formatting import format_date, group_by_date
-from app.relevance import rank_and_cap
+from app.relevance import count_relevant_by_category, rank_and_cap
 from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -54,13 +53,14 @@ init_db()
 
 PAGE_SIZE = 60
 MAX_PER_DAY = 10
+COUNTING_POOL_LIMIT = 2000  # fenêtre sur laquelle les compteurs de filtre sont calculés
 
 
 @app.get("/")
 def index(request: Request, category: str = "Toutes", refreshed: Optional[int] = None, limit: int = PAGE_SIZE):
     with get_conn() as conn:
         items = list_items(conn, category, limit=limit + 1)
-        counts = count_by_category(conn)
+        counts = count_relevant_by_category(list_items(conn, "Toutes", limit=COUNTING_POOL_LIMIT))
         favorited_ids = favorited_item_ids(conn)
     has_more = len(items) > limit
     items = items[:limit]

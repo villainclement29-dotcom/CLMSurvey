@@ -122,14 +122,6 @@ def list_items(conn, category: str | None = None, limit: int = 60):
     return conn.execute("SELECT * FROM items ORDER BY published_at DESC LIMIT ?", (limit,))
 
 
-def count_by_category(conn) -> dict:
-    """Retourne {catégorie: nombre d'articles}, plus la clé 'Toutes' pour le total."""
-    rows = conn.execute("SELECT category, COUNT(*) AS n FROM items GROUP BY category")
-    counts = {row["category"]: row["n"] for row in rows}
-    counts["Toutes"] = sum(counts.values())
-    return counts
-
-
 def get_item(conn, item_id: int):
     rows = conn.execute("SELECT * FROM items WHERE id = ?", (item_id,))
     return rows[0] if rows else None
