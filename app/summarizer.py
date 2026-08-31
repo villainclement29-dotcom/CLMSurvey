@@ -5,7 +5,7 @@ import os
 import trafilatura
 from groq import Groq
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "openai/gpt-oss-20b"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
 
