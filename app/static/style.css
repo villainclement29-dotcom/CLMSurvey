@@ -47,6 +47,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1rem;
   position: sticky;
   top: 0;
@@ -60,6 +62,7 @@ h1 { font-size: 1.25rem; margin: 0; }
 .header-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
@@ -109,8 +112,6 @@ button {
 }
 
 .filters a .icon { font-size: 0.95rem; }
-
-.filters a .count { font-size: 0.72rem; opacity: 0.7; }
 
 .filters a.active {
   color: white;

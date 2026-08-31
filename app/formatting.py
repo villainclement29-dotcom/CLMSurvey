@@ -38,6 +38,15 @@ def format_date(published_at: str) -> str:
     return f"{d.day} {MONTHS_FR[d.month - 1]} {d.year}"
 
 
+def split_today(items, today: date | None = None) -> tuple[list, list]:
+    """Sépare les articles en (ceux d'aujourd'hui, les plus anciens)."""
+    today = today or datetime.utcnow().date()
+    today_items, older_items = [], []
+    for item in items:
+        (today_items if _parse_date(item["published_at"]) == today else older_items).append(item)
+    return today_items, older_items
+
+
 def group_by_date(items, today: date | None = None) -> list[tuple[str, list]]:
     """Regroupe une liste d'articles (triée par date décroissante) en groupes
     (libellé, articles) en préservant l'ordre chronologique."""

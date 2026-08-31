@@ -30,8 +30,8 @@ from app.db import (
     save_ai_summary,
     set_favorite_folder,
 )
-from app.formatting import format_date, group_by_date
-from app.relevance import count_relevant_by_category, rank_and_cap
+from app.formatting import format_date, group_by_date, split_today
+from app.relevance import rank_and_cap, rank_and_cap_single
 from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -53,27 +53,47 @@ init_db()
 
 PAGE_SIZE = 60
 MAX_PER_DAY = 10
-COUNTING_POOL_LIMIT = 2000  # fenêtre sur laquelle les compteurs de filtre sont calculés
+HOME_POOL_LIMIT = 300  # large pool à filtrer pour retrouver les articles du jour
 
 
 @app.get("/")
-def index(request: Request, category: str = "Toutes", refreshed: Optional[int] = None, limit: int = PAGE_SIZE):
+def index(request: Request, category: str = "Toutes", refreshed: Optional[int] = None):
     with get_conn() as conn:
-        items = list_items(conn, category, limit=limit + 1)
-        counts = count_relevant_by_category(list_items(conn, "Toutes", limit=COUNTING_POOL_LIMIT))
+        items = list_items(conn, category, limit=HOME_POOL_LIMIT)
         favorited_ids = favorited_item_ids(conn)
-    has_more = len(items) > limit
-    items = items[:limit]
-    groups = [g for g in rank_and_cap(group_by_date(items), max_per_group=MAX_PER_DAY) if g[1]]
+    today_items, _ = split_today(items)
+    kept_items, total_today = rank_and_cap_single(today_items, max_items=MAX_PER_DAY)
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "groups": groups,
+            "items": kept_items,
+            "total_today": total_today,
             "categories": ["Toutes"] + CATEGORIES,
-            "counts": counts,
             "selected": category,
             "refreshed": refreshed,
+            "cat_icons": CATEGORY_ICONS,
+            "favorited_ids": favorited_ids,
+        },
+    )
+
+
+@app.get("/archives")
+def archives(request: Request, category: str = "Toutes", limit: int = PAGE_SIZE):
+    with get_conn() as conn:
+        items = list_items(conn, category, limit=limit + 1)
+        favorited_ids = favorited_item_ids(conn)
+    has_more = len(items) > limit
+    items = items[:limit]
+    _, older_items = split_today(items)
+    groups = [g for g in rank_and_cap(group_by_date(older_items), max_per_group=MAX_PER_DAY) if g[1]]
+    return templates.TemplateResponse(
+        "archives.html",
+        {
+            "request": request,
+            "groups": groups,
+            "categories": ["Toutes"] + CATEGORIES,
+            "selected": category,
             "limit": limit,
             "page_size": PAGE_SIZE,
             "has_more": has_more,

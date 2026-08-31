@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archives — Veille scientifique</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>🗄 Archives</h1>
+    <a class="favorites-link" href="/">← Aujourd'hui</a>
+  </header>
+
+  <nav class="filters">
+    {% for cat in categories %}
+      <a href="/archives?category={{ cat }}" class="{{ 'active' if cat == selected else '' }}">
+        {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %}
+        {{ cat }}
+      </a>
+    {% endfor %}
+  </nav>
+
+  {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
+  {% for label, group_items, total in groups %}
+    <h2 class="date-heading">
+      {{ label }}
+      {% if total > group_items|length %}
+      <span class="date-heading-note">— {{ group_items|length }} les plus pertinents sur {{ total }}</span>
+      {% endif %}
+    </h2>
+    <ul class="items">
+      {% for item in group_items %}
+      {% include "_item_card.html" %}
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="empty">Aucun article dans les archives pour l'instant.</p>
+  {% endfor %}
+
+  {% if has_more %}
+  <a class="load-more" href="/archives?category={{ selected }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
+  {% endif %}
+</body>
+</html>

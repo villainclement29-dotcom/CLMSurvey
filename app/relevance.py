@@ -64,28 +64,16 @@ def score_item(item) -> float:
     return score
 
 
-def count_relevant_by_category(items) -> dict:
-    """Retourne {catégorie: nombre d'articles pertinents (score > MIN_SCORE)},
-    plus la clé 'Toutes' pour le total. Sert à afficher, sur les filtres,
-    le nombre réellement affiché plutôt que le total brut en base."""
-    counts: dict = {}
-    for item in items:
-        if score_item(item) <= MIN_SCORE:
-            continue
-        counts[item["category"]] = counts.get(item["category"], 0) + 1
-    counts["Toutes"] = sum(counts.values())
-    return counts
+def rank_and_cap_single(items, max_items: int = 10):
+    """Trie une liste d'articles par pertinence, écarte ceux en-dessous de
+    MIN_SCORE (même si ça laisse peu d'articles), et retourne
+    (articles_conservés, total_avant_filtrage)."""
+    ranked = sorted(items, key=score_item, reverse=True)
+    relevant = [it for it in ranked if score_item(it) > MIN_SCORE]
+    return relevant[:max_items], len(items)
 
 
 def rank_and_cap(groups, max_per_group: int = 10):
-    """Prend la sortie de group_by_date (label, items) et retourne
-    (label, items_conservés, total_avant_plafond) en ne gardant que les
-    articles au-dessus de MIN_SCORE, triés par pertinence, dans la limite
-    de max_per_group. Un article clairement hors-sujet n'est jamais
-    affiché juste parce que la journée est peu fournie."""
-    result = []
-    for label, items in groups:
-        ranked = sorted(items, key=score_item, reverse=True)
-        relevant = [it for it in ranked if score_item(it) > MIN_SCORE]
-        result.append((label, relevant[:max_per_group], len(items)))
-    return result
+    """Applique rank_and_cap_single à chaque groupe de group_by_date.
+    Retourne une liste de (label, articles_conservés, total_avant_plafond)."""
+    return [(label, *rank_and_cap_single(items, max_per_group)) for label, items in groups]

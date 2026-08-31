@@ -10,6 +10,7 @@
   <header>
     <h1>Veille scientifique</h1>
     <div class="header-actions">
+      <a class="favorites-link" href="/archives">🗄 Archives</a>
       <a class="favorites-link" href="/favorites">★ Favoris</a>
       <form method="post" action="/refresh">
         <button type="submit">Rafraîchir</button>
@@ -25,49 +26,31 @@
     {% for cat in categories %}
       <a href="/?category={{ cat }}" class="{{ 'active' if cat == selected else '' }}">
         {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %}
-        {{ cat }}<span class="count">{{ counts.get(cat, 0) }}</span>
+        {{ cat }}
       </a>
     {% endfor %}
   </nav>
 
   {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
-  {% for label, group_items, total in groups %}
-    <h2 class="date-heading">
-      {{ label }}
-      {% if total > group_items|length %}
-      <span class="date-heading-note">— {{ group_items|length }} les plus pertinents sur {{ total }}</span>
-      {% endif %}
-    </h2>
-    <ul class="items">
-      {% for item in group_items %}
-      <li class="item-wrapper">
-        <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
-          <input type="hidden" name="next" value="{{ next_url }}">
-          <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
-                  title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
-            {{ '★' if item.id in favorited_ids else '☆' }}
-          </button>
-        </form>
-        <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
-          <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
-          <span class="title">{{ item.title }}</span>
-          <span class="meta">
-            <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
-            {{ item.source }} · {{ item.published_at | date }}
-          </span>
-          {% if item.summary %}
-          <span class="summary">{{ item.summary }}</span>
-          {% endif %}
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="empty">Aucun article pour l'instant. Cliquez sur "Rafraîchir" pour lancer une première collecte.</p>
-  {% endfor %}
+  <h2 class="date-heading">
+    Aujourd'hui
+    {% if total_today > items|length %}
+    <span class="date-heading-note">— {{ items|length }} les plus pertinents sur {{ total_today }}</span>
+    {% endif %}
+  </h2>
 
-  {% if has_more %}
-  <a class="load-more" href="/?category={{ selected }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
+  {% if items %}
+  <ul class="items">
+    {% for item in items %}
+    {% include "_item_card.html" %}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">
+    Aucun article pertinent aujourd'hui pour l'instant.
+    {% if total_today %}({{ total_today }} écarté(s) comme peu pertinent(s)){% endif %}
+    Consultez les <a href="/archives">archives</a>, ou cliquez sur "Rafraîchir".
+  </p>
   {% endif %}
 </body>
 </html>
