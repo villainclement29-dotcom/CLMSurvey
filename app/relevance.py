@@ -14,7 +14,7 @@ SPACE_KEYWORDS = [
     "cosmology", "telescope", "jaxa", "esa", "nasa", "iss", "astronaut",
     "planetary", "interstellar", "cosmic", "galaxy", "black hole",
     "gravitational", "rover", "probe", "space exploration", "deep space",
-    "asteroid", "comet", "spacewalk", "propulsion",
+    "asteroid", "comet", "spacewalk", "propulsion", "artemis",
 ]
 
 AI_RESEARCH_KEYWORDS = [
