@@ -7,7 +7,7 @@ import trafilatura
 from google import genai
 from google.genai import errors as genai_errors
 
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-flash-latest"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
 MAX_RETRIES = 3
