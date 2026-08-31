@@ -13,9 +13,19 @@
     <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
     <h1>{{ item.title }}</h1>
 
-    <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">
-      🔗 Source originale — {{ item.source }}
-    </a>
+    <div class="summary-actions">
+      <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">
+        🔗 Source originale — {{ item.source }}
+      </a>
+      <span class="published-date">{{ item.published_at | date }}</span>
+      <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
+        <input type="hidden" name="next" value="/article/{{ item.id }}">
+        <button type="submit" class="fav-btn {{ 'active' if favorited else '' }}"
+                title="{{ 'Retirer des favoris' if favorited else 'Ajouter aux favoris' }}">
+          {{ '★ Dans les favoris' if favorited else '☆ Ajouter aux favoris' }}
+        </button>
+      </form>
+    </div>
 
     {% if item.ai_summary %}
       <p class="summary-text">{{ item.ai_summary }}</p>

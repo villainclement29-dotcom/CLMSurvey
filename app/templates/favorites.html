@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Favoris — Veille scientifique</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>★ Mes favoris</h1>
+    <a class="favorites-link" href="/">← Accueil</a>
+  </header>
+
+  <form method="post" action="/folders" class="new-folder-form">
+    <input type="text" name="name" placeholder="Nom du nouveau dossier…" maxlength="60" required>
+    <button type="submit">Créer un dossier</button>
+  </form>
+
+  {% for label, folder_id, favs in groups %}
+    <h2 class="date-heading">{{ label }} <span class="count">{{ favs|length }}</span></h2>
+    {% if favs %}
+    <ul class="items">
+      {% for item in favs %}
+      <li class="item-wrapper">
+        <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
+          <input type="hidden" name="next" value="/favorites">
+          <button type="submit" class="fav-btn active" title="Retirer des favoris">★</button>
+        </form>
+        <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
+          <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
+          <span class="title">{{ item.title }}</span>
+          <span class="meta">
+            <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
+            {{ item.source }} · {{ item.published_at | date }}
+          </span>
+        </a>
+        <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-select-form">
+          <select name="folder_id" onchange="this.form.submit()">
+            <option value="none" {{ 'selected' if folder_id is none else '' }}>Non classé</option>
+            {% for f in folders %}
+            <option value="{{ f.id }}" {{ 'selected' if f.id == folder_id else '' }}>{{ f.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">Aucun article dans ce dossier pour l'instant.</p>
+    {% endif %}
+  {% endfor %}
+</body>
+</html>

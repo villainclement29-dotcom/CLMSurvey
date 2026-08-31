@@ -5,15 +5,30 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.collector import run_collection
 from app.config import CATEGORIES, CATEGORY_ICONS
-from app.db import count_by_category, get_conn, get_item, init_db, list_items, save_ai_summary
-from app.formatting import group_by_date
+from app.db import (
+    add_favorite,
+    count_by_category,
+    create_folder,
+    favorited_item_ids,
+    get_conn,
+    get_item,
+    init_db,
+    is_favorited,
+    list_favorites,
+    list_folders,
+    list_items,
+    remove_favorite,
+    save_ai_summary,
+    set_favorite_folder,
+)
+from app.formatting import format_date, group_by_date
 from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -29,6 +44,7 @@ def favicon_url(article_url: str) -> str:
 
 
 templates.env.filters["favicon"] = favicon_url
+templates.env.filters["date"] = format_date
 
 init_db()
 
@@ -40,6 +56,7 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
     with get_conn() as conn:
         items = list_items(conn, category, limit=limit + 1)
         counts = count_by_category(conn)
+        favorited_ids = favorited_item_ids(conn)
     has_more = len(items) > limit
     items = items[:limit]
     return templates.TemplateResponse(
@@ -55,6 +72,7 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
             "page_size": PAGE_SIZE,
             "has_more": has_more,
             "cat_icons": CATEGORY_ICONS,
+            "favorited_ids": favorited_ids,
         },
     )
 
@@ -69,12 +87,65 @@ def refresh():
 def article(request: Request, item_id: int):
     with get_conn() as conn:
         item = get_item(conn, item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Article introuvable")
+        if item is None:
+            raise HTTPException(status_code=404, detail="Article introuvable")
+        favorited = is_favorited(conn, item_id)
     return templates.TemplateResponse(
         "summary.html",
-        {"request": request, "item": item, "cat_icons": CATEGORY_ICONS},
+        {"request": request, "item": item, "cat_icons": CATEGORY_ICONS, "favorited": favorited},
     )
+
+
+@app.post("/favorites/{item_id}/toggle")
+def toggle_favorite(item_id: int, next: str = Form("/")):
+    with get_conn() as conn:
+        if get_item(conn, item_id) is None:
+            raise HTTPException(status_code=404, detail="Article introuvable")
+        if is_favorited(conn, item_id):
+            remove_favorite(conn, item_id)
+        else:
+            add_favorite(conn, item_id)
+    return RedirectResponse(url=next, status_code=303)
+
+
+@app.get("/favorites")
+def favorites_page(request: Request):
+    with get_conn() as conn:
+        folders = list_folders(conn)
+        favorites = list_favorites(conn)
+    by_folder = {f["id"]: [] for f in folders}
+    unclassified = []
+    for fav in favorites:
+        bucket = by_folder.get(fav["folder_id"])
+        (bucket if bucket is not None else unclassified).append(fav)
+    groups = [(f["name"], f["id"], by_folder[f["id"]]) for f in folders]
+    groups.append(("Non classés", None, unclassified))
+    return templates.TemplateResponse(
+        "favorites.html",
+        {
+            "request": request,
+            "groups": groups,
+            "folders": folders,
+            "cat_icons": CATEGORY_ICONS,
+        },
+    )
+
+
+@app.post("/folders")
+def create_folder_route(name: str = Form(...)):
+    name = name.strip()
+    if name:
+        with get_conn() as conn:
+            create_folder(conn, name)
+    return RedirectResponse(url="/favorites", status_code=303)
+
+
+@app.post("/favorites/{item_id}/folder")
+def assign_favorite_folder(item_id: int, folder_id: str = Form(...)):
+    fid = int(folder_id) if folder_id and folder_id != "none" else None
+    with get_conn() as conn:
+        set_favorite_folder(conn, item_id, fid)
+    return RedirectResponse(url="/favorites", status_code=303)
 
 
 @app.get("/api/summary/{item_id}")

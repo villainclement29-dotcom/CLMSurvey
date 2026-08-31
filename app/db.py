@@ -33,6 +33,21 @@ SCHEMA_STATEMENTS = [
     """,
     "CREATE INDEX IF NOT EXISTS idx_items_category ON items(category)",
     "CREATE INDEX IF NOT EXISTS idx_items_published ON items(published_at)",
+    """
+    CREATE TABLE IF NOT EXISTS folders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER NOT NULL UNIQUE REFERENCES items(id),
+        folder_id INTEGER REFERENCES folders(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+    """,
 ]
 
 
@@ -123,3 +138,50 @@ def get_item(conn, item_id: int):
 def save_ai_summary(conn, item_id: int, ai_summary: str):
     conn.execute("UPDATE items SET ai_summary = ? WHERE id = ?", (ai_summary, item_id))
     conn.commit()
+
+
+def favorited_item_ids(conn) -> set:
+    rows = conn.execute("SELECT item_id FROM favorites")
+    return {row["item_id"] for row in rows}
+
+
+def is_favorited(conn, item_id: int) -> bool:
+    return bool(conn.execute("SELECT 1 FROM favorites WHERE item_id = ?", (item_id,)))
+
+
+def add_favorite(conn, item_id: int):
+    if not is_favorited(conn, item_id):
+        conn.execute("INSERT INTO favorites (item_id) VALUES (?)", (item_id,))
+    conn.commit()
+
+
+def remove_favorite(conn, item_id: int):
+    conn.execute("DELETE FROM favorites WHERE item_id = ?", (item_id,))
+    conn.commit()
+
+
+def set_favorite_folder(conn, item_id: int, folder_id: int | None):
+    conn.execute("UPDATE favorites SET folder_id = ? WHERE item_id = ?", (folder_id, item_id))
+    conn.commit()
+
+
+def create_folder(conn, name: str):
+    if not conn.execute("SELECT 1 FROM folders WHERE name = ?", (name,)):
+        conn.execute("INSERT INTO folders (name) VALUES (?)", (name,))
+    conn.commit()
+
+
+def list_folders(conn):
+    return conn.execute("SELECT * FROM folders ORDER BY name")
+
+
+def list_favorites(conn):
+    """Retourne les favoris (avec les infos de l'article), les plus récents en premier."""
+    return conn.execute(
+        """
+        SELECT items.*, favorites.folder_id AS folder_id
+        FROM favorites
+        JOIN items ON items.id = favorites.item_id
+        ORDER BY favorites.created_at DESC
+        """
+    )

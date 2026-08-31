@@ -9,9 +9,12 @@
 <body>
   <header>
     <h1>Veille scientifique</h1>
-    <form method="post" action="/refresh">
-      <button type="submit">Rafraîchir</button>
-    </form>
+    <div class="header-actions">
+      <a class="favorites-link" href="/favorites">★ Favoris</a>
+      <form method="post" action="/refresh">
+        <button type="submit">Rafraîchir</button>
+      </form>
+    </div>
   </header>
 
   {% if refreshed is not none %}
@@ -27,17 +30,25 @@
     {% endfor %}
   </nav>
 
+  {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
   {% for label, group_items in groups %}
     <h2 class="date-heading">{{ label }}</h2>
     <ul class="items">
       {% for item in group_items %}
-      <li>
+      <li class="item-wrapper">
+        <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
+                  title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
+            {{ '★' if item.id in favorited_ids else '☆' }}
+          </button>
+        </form>
         <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
           <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
           <span class="title">{{ item.title }}</span>
           <span class="meta">
             <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
-            {{ item.source }}
+            {{ item.source }} · {{ item.published_at | date }}
           </span>
           {% if item.summary %}
           <span class="summary">{{ item.summary }}</span>

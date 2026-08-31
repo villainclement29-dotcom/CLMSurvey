@@ -57,6 +57,21 @@ header {
 
 h1 { font-size: 1.25rem; margin: 0; }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.favorites-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.favorites-link:hover { color: var(--text); }
+
 button {
   background: var(--accent);
   color: white;
@@ -122,6 +137,39 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 0.85rem;
 }
+
+.item-wrapper {
+  position: relative;
+}
+
+.fav-form {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
+.fav-btn {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fav-btn.active {
+  color: #f5a623;
+  border-color: #f5a623;
+}
+
+.fav-btn:hover { background: var(--surface-hover); }
 
 .item {
   display: flex;
@@ -234,6 +282,14 @@ button {
   margin: 0.5rem 0 1.25rem;
 }
 
+.summary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
 .source-link {
   display: inline-flex;
   align-items: center;
@@ -245,10 +301,26 @@ button {
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--accent);
   border-radius: 999px;
-  margin-bottom: 1.75rem;
 }
 
 .source-link:hover { background: var(--accent); color: white; }
+
+.published-date {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.summary-actions .fav-form { position: static; }
+
+.summary-actions .fav-btn {
+  width: auto;
+  height: auto;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  gap: 0.35rem;
+}
 
 .summary-text {
   font-size: 1.02rem;
@@ -278,4 +350,40 @@ button {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Page favoris */
+
+.new-folder-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.new-folder-form input {
+  flex: 1;
+  max-width: 320px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.folder-select-form {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
+.folder-select-form select {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  max-width: 140px;
 }

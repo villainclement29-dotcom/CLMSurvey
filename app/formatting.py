@@ -30,6 +30,14 @@ def date_label(published_at: str, today: date) -> str:
     return f"{d.day} {MONTHS_FR[d.month - 1]} {d.year}"
 
 
+def format_date(published_at: str) -> str:
+    """Formate une date pour l'affichage sur une carte article, ex: '31 août 2026'."""
+    d = _parse_date(published_at)
+    if d is None:
+        return ""
+    return f"{d.day} {MONTHS_FR[d.month - 1]} {d.year}"
+
+
 def group_by_date(items, today: date | None = None) -> list[tuple[str, list]]:
     """Regroupe une liste d'articles (triée par date décroissante) en groupes
     (libellé, articles) en préservant l'ordre chronologique."""
