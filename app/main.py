@@ -32,6 +32,7 @@ from app.db import (
     set_favorite_folder,
 )
 from app.formatting import format_date, group_by_date
+from app.relevance import rank_and_cap
 from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -52,6 +53,7 @@ templates.env.filters["date"] = format_date
 init_db()
 
 PAGE_SIZE = 60
+MAX_PER_DAY = 10
 
 
 @app.get("/")
@@ -62,11 +64,12 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
         favorited_ids = favorited_item_ids(conn)
     has_more = len(items) > limit
     items = items[:limit]
+    groups = [g for g in rank_and_cap(group_by_date(items), max_per_group=MAX_PER_DAY) if g[1]]
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "groups": group_by_date(items),
+            "groups": groups,
             "categories": ["Toutes"] + CATEGORIES,
             "counts": counts,
             "selected": category,

@@ -129,6 +129,13 @@ button {
 
 .date-heading:first-of-type { margin-top: 0; }
 
+.date-heading-note {
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+  opacity: 0.75;
+}
+
 .items {
   list-style: none;
   padding: 0;

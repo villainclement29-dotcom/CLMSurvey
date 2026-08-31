@@ -31,8 +31,13 @@
   </nav>
 
   {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
-  {% for label, group_items in groups %}
-    <h2 class="date-heading">{{ label }}</h2>
+  {% for label, group_items, total in groups %}
+    <h2 class="date-heading">
+      {{ label }}
+      {% if total > group_items|length %}
+      <span class="date-heading-note">— {{ group_items|length }} les plus pertinents sur {{ total }}</span>
+      {% endif %}
+    </h2>
     <ul class="items">
       {% for item in group_items %}
       <li class="item-wrapper">
