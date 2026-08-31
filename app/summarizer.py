@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 
-import anthropic
 import trafilatura
+from google import genai
 
-MODEL = "claude-haiku-4-5-20251001"
+MODEL = "gemini-2.5-flash"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
 
@@ -34,14 +34,14 @@ def _extract_article_text(url: str, fallback: str) -> str:
 
 
 def generate_summary(title: str, url: str, fallback_text: str) -> str:
-    """Génère un résumé en français via Claude Haiku. Lève une exception si
-    ANTHROPIC_API_KEY est absent ou si l'appel échoue — à charge de
-    l'appelant de gérer l'erreur côté UI."""
+    """Génère un résumé en français via Gemini Flash (gratuit). Lève une
+    exception si GOOGLE_API_KEY est absent ou si l'appel échoue — à charge
+    de l'appelant de gérer l'erreur côté UI."""
     article_text = _extract_article_text(url, fallback_text or title)
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    response = client.messages.create(
+    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+    response = client.models.generate_content(
         model=MODEL,
-        max_tokens=MAX_SUMMARY_TOKENS,
-        messages=[{"role": "user", "content": PROMPT_TEMPLATE.format(title=title, article_text=article_text)}],
+        contents=PROMPT_TEMPLATE.format(title=title, article_text=article_text),
+        config={"max_output_tokens": MAX_SUMMARY_TOKENS},
     )
-    return response.content[0].text.strip()
+    return response.text.strip()
