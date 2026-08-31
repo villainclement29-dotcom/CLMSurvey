@@ -1,0 +1,5 @@
+.venv
+logs
+app/data.db
+scripts
+__pycache__

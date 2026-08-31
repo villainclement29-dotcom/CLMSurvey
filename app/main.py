@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,9 +15,11 @@ from app.config import CATEGORIES, CATEGORY_ICONS
 from app.db import count_by_category, get_conn, init_db, list_items
 from app.formatting import group_by_date
 
+BASE_DIR = Path(__file__).resolve().parent
+
 app = FastAPI(title="Veille scientifique")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 def favicon_url(article_url: str) -> str:
@@ -58,3 +62,14 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
 def refresh():
     new_count = run_collection()
     return RedirectResponse(url=f"/?refreshed={new_count}", status_code=303)
+
+
+@app.get("/cron")
+def cron_refresh(authorization: Optional[str] = Header(default=None)):
+    """Appelée quotidiennement par Vercel Cron (GET, header Authorization
+    automatiquement injecté par Vercel à partir de la variable CRON_SECRET)."""
+    secret = os.environ.get("CRON_SECRET")
+    if secret and authorization != f"Bearer {secret}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    new_count = run_collection()
+    return {"new_items": new_count}

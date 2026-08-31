@@ -5,3 +5,5 @@ venv/
 app/data.db
 .DS_Store
 logs/
+.vercel
+.env*
