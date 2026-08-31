@@ -12,8 +12,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.collector import run_collection
 from app.config import CATEGORIES, CATEGORY_ICONS
-from app.db import count_by_category, get_conn, init_db, list_items
+from app.db import count_by_category, get_conn, get_item, init_db, list_items, save_ai_summary
 from app.formatting import group_by_date
+from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -62,6 +63,34 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
 def refresh():
     new_count = run_collection()
     return RedirectResponse(url=f"/?refreshed={new_count}", status_code=303)
+
+
+@app.get("/article/{item_id}")
+def article(request: Request, item_id: int):
+    with get_conn() as conn:
+        item = get_item(conn, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Article introuvable")
+    return templates.TemplateResponse(
+        "summary.html",
+        {"request": request, "item": item, "cat_icons": CATEGORY_ICONS},
+    )
+
+
+@app.get("/api/summary/{item_id}")
+def api_summary(item_id: int):
+    with get_conn() as conn:
+        item = get_item(conn, item_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Article introuvable")
+        if item["ai_summary"]:
+            return {"summary": item["ai_summary"]}
+        try:
+            summary = generate_summary(item["title"], item["url"], item["summary"] or "")
+        except Exception:
+            raise HTTPException(status_code=502, detail="Échec de la génération du résumé")
+        save_ai_summary(conn, item_id, summary)
+    return {"summary": summary}
 
 
 @app.get("/cron")

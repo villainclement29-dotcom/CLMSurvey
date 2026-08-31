@@ -80,6 +80,10 @@ def init_db():
     with get_conn() as conn:
         for statement in SCHEMA_STATEMENTS:
             conn.execute(statement)
+        try:
+            conn.execute("ALTER TABLE items ADD COLUMN ai_summary TEXT")
+        except Exception:
+            pass  # colonne déjà présente (migration idempotente)
         conn.commit()
 
 
@@ -109,3 +113,13 @@ def count_by_category(conn) -> dict:
     counts = {row["category"]: row["n"] for row in rows}
     counts["Toutes"] = sum(counts.values())
     return counts
+
+
+def get_item(conn, item_id: int):
+    rows = conn.execute("SELECT * FROM items WHERE id = ?", (item_id,))
+    return rows[0] if rows else None
+
+
+def save_ai_summary(conn, item_id: int, ai_summary: str):
+    conn.execute("UPDATE items SET ai_summary = ? WHERE id = ?", (ai_summary, item_id))
+    conn.commit()

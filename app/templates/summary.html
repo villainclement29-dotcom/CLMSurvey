@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ item.title }} — Résumé</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <a class="back-link" href="/">← Retour à la liste</a>
+
+  <article class="summary-card" data-category="{{ item.category }}">
+    <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
+    <h1>{{ item.title }}</h1>
+
+    <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">
+      🔗 Source originale — {{ item.source }}
+    </a>
+
+    {% if item.ai_summary %}
+      <p class="summary-text">{{ item.ai_summary }}</p>
+    {% else %}
+      <div id="loader" class="loader">
+        <span class="spinner"></span>
+        <p>Génération du résumé…</p>
+      </div>
+      <p id="summary-text" class="summary-text" hidden></p>
+      <script>
+        fetch("/api/summary/{{ item.id }}")
+          .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+          .then(({ ok, data }) => {
+            const loader = document.getElementById("loader");
+            const textEl = document.getElementById("summary-text");
+            loader.hidden = true;
+            textEl.hidden = false;
+            textEl.textContent = ok && data.summary
+              ? data.summary
+              : "Impossible de générer un résumé pour cet article. Consultez la source ci-dessus.";
+          })
+          .catch(() => {
+            document.getElementById("loader").hidden = true;
+            const textEl = document.getElementById("summary-text");
+            textEl.hidden = false;
+            textEl.textContent = "Une erreur est survenue lors de la génération du résumé. Consultez la source ci-dessus.";
+          });
+      </script>
+    {% endif %}
+  </article>
+</body>
+</html>

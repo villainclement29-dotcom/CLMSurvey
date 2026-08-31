@@ -32,7 +32,7 @@
     <ul class="items">
       {% for item in group_items %}
       <li>
-        <a class="item" data-category="{{ item.category }}" href="{{ item.url }}" target="_blank" rel="noopener">
+        <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
           <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
           <span class="title">{{ item.title }}</span>
           <span class="meta">
