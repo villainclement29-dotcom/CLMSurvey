@@ -5,11 +5,11 @@ import time
 
 import trafilatura
 from google import genai
-from google.genai import errors as genai_errors
 
 MODEL = "gemini-flash-latest"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 600
+REQUEST_TIMEOUT_MS = 15000
 MAX_RETRIES = 2
 RETRY_DELAY_SECONDS = 1
 
@@ -38,10 +38,11 @@ def _extract_article_text(url: str, fallback: str) -> str:
 
 
 def generate_summary(title: str, url: str, fallback_text: str) -> str:
-    """Génère un résumé en français via Gemini Flash (gratuit). Retente
-    quelques fois en cas de surcharge temporaire (503) côté Google. Lève une
-    exception si GOOGLE_API_KEY est absent ou si tous les essais échouent —
-    à charge de l'appelant de gérer l'erreur côté UI."""
+    """Génère un résumé en français via Gemini Flash (gratuit). Retente une
+    fois en cas d'échec (surcharge, timeout...), avec un timeout HTTP borné
+    pour ne jamais bloquer trop longtemps. Lève une exception si
+    GOOGLE_API_KEY est absent ou si tous les essais échouent — à charge de
+    l'appelant de gérer l'erreur côté UI."""
     article_text = _extract_article_text(url, fallback_text or title)
     client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
     prompt = PROMPT_TEMPLATE.format(title=title, article_text=article_text)
@@ -55,11 +56,12 @@ def generate_summary(title: str, url: str, fallback_text: str) -> str:
                 config={
                     "max_output_tokens": MAX_SUMMARY_TOKENS,
                     "thinking_config": {"thinking_budget": 0},
+                    "http_options": {"timeout": REQUEST_TIMEOUT_MS},
                 },
             )
             return response.text.strip()
-        except genai_errors.ServerError as exc:
+        except Exception as exc:
             last_error = exc
             if attempt < MAX_RETRIES - 1:
-                time.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
+                time.sleep(RETRY_DELAY_SECONDS)
     raise last_error

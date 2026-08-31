@@ -87,7 +87,8 @@ def api_summary(item_id: int):
             return {"summary": item["ai_summary"]}
         try:
             summary = generate_summary(item["title"], item["url"], item["summary"] or "")
-        except Exception:
+        except Exception as exc:
+            print(f"[summary] échec pour item {item_id}: {type(exc).__name__}: {exc}")
             raise HTTPException(status_code=502, detail="Échec de la génération du résumé")
         save_ai_summary(conn, item_id, summary)
     return {"summary": summary}
