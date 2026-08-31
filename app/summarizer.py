@@ -7,10 +7,10 @@ import trafilatura
 from google import genai
 
 MODEL = "gemini-flash-latest"
-MAX_ARTICLE_CHARS = 8000
+MAX_ARTICLE_CHARS = 3000
 MAX_SUMMARY_TOKENS = 600
-REQUEST_TIMEOUT_MS = 15000
-MAX_RETRIES = 2
+REQUEST_TIMEOUT_MS = 45000
+MAX_RETRIES = 1
 RETRY_DELAY_SECONDS = 1
 
 PROMPT_TEMPLATE = """Résume cet article en français, en 4 à 6 phrases claires \
