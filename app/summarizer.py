@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import os
+import time
 
 import trafilatura
 from google import genai
+from google.genai import errors as genai_errors
 
-MODEL = "gemini-flash-latest"
+MODEL = "gemini-2.0-flash"
 MAX_ARTICLE_CHARS = 8000
 MAX_SUMMARY_TOKENS = 400
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 2
 
 PROMPT_TEMPLATE = """Résume cet article en français, en 4 à 6 phrases claires \
 et accessibles, pour quelqu'un qui n'a pas le temps de le lire en entier. \
@@ -34,14 +38,25 @@ def _extract_article_text(url: str, fallback: str) -> str:
 
 
 def generate_summary(title: str, url: str, fallback_text: str) -> str:
-    """Génère un résumé en français via Gemini Flash (gratuit). Lève une
-    exception si GOOGLE_API_KEY est absent ou si l'appel échoue — à charge
-    de l'appelant de gérer l'erreur côté UI."""
+    """Génère un résumé en français via Gemini Flash (gratuit). Retente
+    quelques fois en cas de surcharge temporaire (503) côté Google. Lève une
+    exception si GOOGLE_API_KEY est absent ou si tous les essais échouent —
+    à charge de l'appelant de gérer l'erreur côté UI."""
     article_text = _extract_article_text(url, fallback_text or title)
     client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=PROMPT_TEMPLATE.format(title=title, article_text=article_text),
-        config={"max_output_tokens": MAX_SUMMARY_TOKENS},
-    )
-    return response.text.strip()
+    prompt = PROMPT_TEMPLATE.format(title=title, article_text=article_text)
+
+    last_error: Exception | None = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+                config={"max_output_tokens": MAX_SUMMARY_TOKENS},
+            )
+            return response.text.strip()
+        except genai_errors.ServerError as exc:
+            last_error = exc
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
+    raise last_error
