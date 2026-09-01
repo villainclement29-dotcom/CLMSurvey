@@ -1,7 +1,3 @@
-<button type="button" class="menu-toggle" id="menu-toggle-btn" aria-label="Ouvrir le menu">
-  <span></span><span></span><span></span>
-</button>
-
 <div class="sidebar-backdrop" id="sidebar-backdrop" hidden>
   <nav class="sidebar">
     <button type="button" class="sidebar-close" id="sidebar-close-btn" aria-label="Fermer le menu">&times;</button>
@@ -10,7 +6,7 @@
       <a href="/" class="sidebar-link {{ 'active' if request.url.path == '/' else '' }}">🏠 Accueil</a>
       <a href="/calendar" class="sidebar-link {{ 'active' if request.url.path == '/calendar' else '' }}">📅 Calendrier</a>
       <a href="/archives" class="sidebar-link {{ 'active' if request.url.path == '/archives' else '' }}">🗄 Archives</a>
-      <a href="/favorites" class="sidebar-link {{ 'active' if '/favorites' in request.url.path else '' }}">★ Favoris</a>
+      <a href="/favorites" class="sidebar-link {{ 'active' if '/favorites' in request.url.path else '' }}">♥ Favoris</a>
     </div>
 
     {% if categories is defined %}

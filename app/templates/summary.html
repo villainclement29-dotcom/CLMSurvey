@@ -10,7 +10,7 @@
 <body>
   <header>
     <div class="header-left">
-      {% include "_sidebar.html" %}
+      {% include "_sidebar_toggle.html" %}
       <a class="back-link" href="/">← Retour à la liste</a>
     </div>
   </header>
@@ -28,7 +28,7 @@
         <input type="hidden" name="next" value="/article/{{ item.id }}">
         <button type="submit" class="fav-btn {{ 'active' if favorited else '' }}"
                 title="{{ 'Retirer des favoris' if favorited else 'Ajouter aux favoris' }}">
-          {{ '★ Dans les favoris' if favorited else '☆ Ajouter aux favoris' }}
+          {{ '♥ Dans les favoris' if favorited else '♡ Ajouter aux favoris' }}
         </button>
       </form>
     </div>
@@ -62,5 +62,6 @@
       </script>
     {% endif %}
   </article>
+  {% include "_sidebar_panel.html" %}
 </body>
 </html>

@@ -10,13 +10,8 @@
 <body>
   <header>
     <div class="header-left">
-      {% include "_sidebar.html" %}
+      {% include "_sidebar_toggle.html" %}
       <h1>Veille scientifique</h1>
-    </div>
-    <div class="header-actions">
-      <form method="post" action="/refresh">
-        <button type="submit">Rafraîchir</button>
-      </form>
     </div>
   </header>
 
@@ -42,8 +37,9 @@
   <p class="empty">
     Aucun article pertinent aujourd'hui pour l'instant.
     {% if total_today %}({{ total_today }} écarté(s) comme peu pertinent(s)){% endif %}
-    Consultez les <a href="/archives">archives</a>, ou cliquez sur "Rafraîchir".
+    Consultez les <a href="/archives">archives</a> en attendant la prochaine collecte.
   </p>
   {% endif %}
+  {% include "_sidebar_panel.html" %}
 </body>
 </html>

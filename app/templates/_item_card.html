@@ -4,7 +4,7 @@
       <input type="hidden" name="next" value="{{ next_url }}">
       <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
               title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
-        {{ '★' if item.id in favorited_ids else '☆' }}
+        {{ '♥' if item.id in favorited_ids else '♡' }}
       </button>
     </form>
     {% if folders is defined %}

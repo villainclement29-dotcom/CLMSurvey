@@ -10,7 +10,7 @@
 <body>
   <header>
     <div class="header-left">
-      {% include "_sidebar.html" %}
+      {% include "_sidebar_toggle.html" %}
       <h1>🗄 Archives</h1>
     </div>
   </header>
@@ -46,5 +46,6 @@
   {% if has_more %}
   <a class="load-more" href="/archives?category={{ selected }}&q={{ search }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
   {% endif %}
+  {% include "_sidebar_panel.html" %}
 </body>
 </html>

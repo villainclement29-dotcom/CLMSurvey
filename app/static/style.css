@@ -133,8 +133,8 @@ button {
 }
 
 .fav-btn.active {
-  color: #f5a623;
-  border-color: #f5a623;
+  color: #f43f5e;
+  border-color: #f43f5e;
 }
 
 .fav-btn:hover { background: var(--surface-hover); }
