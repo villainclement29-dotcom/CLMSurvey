@@ -57,7 +57,8 @@ def extract_event(title: str, url: str, fallback_text: str, published_at: str) -
         client = Groq(api_key=os.environ["GROQ_API_KEY"])
         response = client.chat.completions.create(
             model=MODEL,
-            max_tokens=200,
+            max_tokens=800,
+            reasoning_effort="low",
             messages=[
                 {
                     "role": "user",
