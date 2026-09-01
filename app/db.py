@@ -48,6 +48,17 @@ SCHEMA_STATEMENTS = [
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER NOT NULL REFERENCES items(id),
+        title TEXT NOT NULL,
+        event_date TEXT NOT NULL,
+        category TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)",
 ]
 
 
@@ -102,15 +113,16 @@ def init_db():
         conn.commit()
 
 
-def insert_item(conn, source: str, category: str, title: str, url: str, summary: str, published_at: str) -> bool:
-    """Insère un article. Retourne False si l'URL existe déjà (dédup)."""
+def insert_item(conn, source: str, category: str, title: str, url: str, summary: str, published_at: str):
+    """Insère un article. Retourne son id, ou None si l'URL existe déjà (dédup)."""
     if conn.execute("SELECT 1 FROM items WHERE url = ?", (url,)):
-        return False
-    conn.execute(
-        "INSERT INTO items (source, category, title, url, summary, published_at) VALUES (?, ?, ?, ?, ?, ?)",
+        return None
+    rows = conn.execute(
+        "INSERT INTO items (source, category, title, url, summary, published_at) "
+        "VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
         (source, category, title, url, summary, published_at),
     )
-    return True
+    return rows[0]["id"]
 
 
 def list_items(conn, category: str | None = None, limit: int = 60):
@@ -206,3 +218,25 @@ def assign_favorites_to_folder(conn, item_ids: list[int], folder_id: int):
     for item_id in item_ids:
         conn.execute("UPDATE favorites SET folder_id = ? WHERE item_id = ?", (folder_id, item_id))
     conn.commit()
+
+
+def insert_event(conn, item_id: int, title: str, event_date: str, category: str):
+    conn.execute(
+        "INSERT INTO events (item_id, title, event_date, category) VALUES (?, ?, ?, ?)",
+        (item_id, title, event_date, category),
+    )
+    conn.commit()
+
+
+def list_upcoming_events(conn, today_iso: str):
+    """Événements futurs (>= aujourd'hui), avec l'URL de l'article source, triés par date."""
+    return conn.execute(
+        """
+        SELECT events.*, items.url AS item_url
+        FROM events
+        JOIN items ON items.id = events.item_id
+        WHERE events.event_date >= ?
+        ORDER BY events.event_date ASC
+        """,
+        (today_iso,),
+    )

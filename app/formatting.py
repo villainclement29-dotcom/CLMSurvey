@@ -60,3 +60,21 @@ def group_by_date(items, today: date | None = None) -> list[tuple[str, list]]:
             current_label = label
         groups[-1][1].append(item)
     return groups
+
+
+def group_events_by_date(events) -> list[tuple[str, list]]:
+    """Regroupe des événements (triés par event_date croissant) par date exacte."""
+    groups: list[tuple[str, list]] = []
+    current_date = None
+    for ev in events:
+        if ev["event_date"] != current_date:
+            groups.append((ev["event_date"], []))
+            current_date = ev["event_date"]
+        groups[-1][1].append(ev)
+    return groups
+
+
+def days_until(event_date: str, today: date | None = None) -> int:
+    today = today or datetime.utcnow().date()
+    d = date.fromisoformat(event_date)
+    return (d - today).days

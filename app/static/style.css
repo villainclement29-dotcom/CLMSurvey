@@ -509,3 +509,72 @@ button {
   color: var(--muted);
   max-width: 140px;
 }
+
+/* Page calendrier */
+
+.calendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.calendar-day {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.calendar-date {
+  flex: 0 0 130px;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.15rem;
+}
+
+.calendar-date-main {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.calendar-date-relative {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.calendar-events {
+  flex: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.calendar-event {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cat-color, var(--accent));
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s ease;
+}
+
+.calendar-event:hover { background: var(--surface-hover); }
+
+.calendar-event .badge { margin: 0; white-space: nowrap; }
+
+.calendar-event-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 520px) {
+  .calendar-day { flex-direction: column; gap: 0.4rem; }
+  .calendar-date { flex-direction: row; gap: 0.5rem; align-items: baseline; }
+}

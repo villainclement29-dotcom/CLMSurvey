@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -26,11 +27,12 @@ from app.db import (
     list_favorites,
     list_folders,
     list_items,
+    list_upcoming_events,
     remove_favorite,
     save_ai_summary,
     set_favorite_folder,
 )
-from app.formatting import format_date, group_by_date, split_today
+from app.formatting import days_until, format_date, group_by_date, group_events_by_date, split_today
 from app.relevance import rank_and_cap, rank_and_cap_single
 from app.summarizer import generate_summary
 
@@ -48,6 +50,7 @@ def favicon_url(article_url: str) -> str:
 
 templates.env.filters["favicon"] = favicon_url
 templates.env.filters["date"] = format_date
+templates.env.filters["days_until"] = days_until
 
 init_db()
 
@@ -100,6 +103,18 @@ def archives(request: Request, category: str = "Toutes", limit: int = PAGE_SIZE)
             "cat_icons": CATEGORY_ICONS,
             "favorited_ids": favorited_ids,
         },
+    )
+
+
+@app.get("/calendar")
+def calendar_page(request: Request):
+    today_iso = datetime.utcnow().date().isoformat()
+    with get_conn() as conn:
+        events = list_upcoming_events(conn, today_iso)
+    groups = group_events_by_date(events)
+    return templates.TemplateResponse(
+        "calendar.html",
+        {"request": request, "groups": groups, "cat_icons": CATEGORY_ICONS},
     )
 
 

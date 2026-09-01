@@ -34,9 +34,9 @@ def _extract_article_text(url: str, fallback: str) -> str:
 
 
 def generate_summary(title: str, url: str, fallback_text: str) -> str:
-    """Génère un résumé en français via Groq (Llama 3.3, gratuit). Lève une
-    exception si GROQ_API_KEY est absent ou si l'appel échoue — à charge de
-    l'appelant de gérer l'erreur côté UI."""
+    """Génère un résumé en français via Groq (gratuit). Lève une exception si
+    GROQ_API_KEY est absent ou si l'appel échoue — à charge de l'appelant de
+    gérer l'erreur côté UI."""
     article_text = _extract_article_text(url, fallback_text or title)
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
     response = client.chat.completions.create(

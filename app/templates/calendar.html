@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendrier — Veille scientifique</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>📅 Calendrier</h1>
+    <a class="favorites-link" href="/">← Accueil</a>
+  </header>
+
+  {% if groups %}
+  <div class="calendar-list">
+    {% for event_date, events in groups %}
+    <div class="calendar-day">
+      <div class="calendar-date">
+        <span class="calendar-date-main">{{ event_date | date }}</span>
+        {% set d = event_date | days_until %}
+        <span class="calendar-date-relative">
+          {% if d == 0 %}aujourd'hui{% elif d == 1 %}demain{% else %}dans {{ d }} jours{% endif %}
+        </span>
+      </div>
+      <ul class="calendar-events">
+        {% for ev in events %}
+        <li>
+          <a class="calendar-event" data-category="{{ ev.category }}" href="/article/{{ ev.item_id }}">
+            <span class="badge">{{ cat_icons.get(ev.category, '') }} {{ ev.category }}</span>
+            <span class="calendar-event-title">{{ ev.title }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">
+    Aucun événement futur détecté pour l'instant. Le calendrier se remplit
+    automatiquement quand un article annonce une date précise (lancement,
+    sortie spatiale, publication...).
+  </p>
+  {% endif %}
+</body>
+</html>
