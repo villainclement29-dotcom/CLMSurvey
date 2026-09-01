@@ -68,6 +68,7 @@ def extract_event(title: str, url: str, fallback_text: str, published_at: str) -
             ],
         )
         raw = response.choices[0].message.content.strip()
+        print(f"[events] réponse brute pour {url!r}: {raw!r}")
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
             return None
@@ -81,5 +82,6 @@ def extract_event(title: str, url: str, fallback_text: str, published_at: str) -
         if date.fromisoformat(event_date) < date.today():
             return None
         return {"date": event_date, "title": event_title}
-    except Exception:
+    except Exception as exc:
+        print(f"[events] échec extraction pour {url!r}: {type(exc).__name__}: {exc}")
         return None
