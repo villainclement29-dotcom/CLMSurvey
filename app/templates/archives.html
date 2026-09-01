@@ -46,6 +46,7 @@
   {% if has_more %}
   <a class="load-more" href="/archives?category={{ selected }}&q={{ search }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
   {% endif %}
+  {% include "_folder_picker_modal.html" %}
   {% include "_sidebar_panel.html" %}
 </body>
 </html>

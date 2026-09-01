@@ -1,0 +1,42 @@
+{% if folders is defined %}
+<div class="modal-backdrop" id="folder-picker-backdrop" hidden>
+  <div class="modal">
+    <button type="button" class="modal-close" id="folder-picker-close-btn" aria-label="Fermer">&times;</button>
+    <h2>Ajouter aux favoris</h2>
+    <form method="post" id="folder-picker-form">
+      <input type="hidden" name="next" id="folder-picker-next" value="">
+      <ul class="folder-picker-list">
+        <li><button type="submit" name="folder_id" value="none">Sans dossier</button></li>
+        {% for f in folders %}
+        <li><button type="submit" name="folder_id" value="{{ f.id }}">📁 {{ f.name }}</button></li>
+        {% endfor %}
+      </ul>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var backdrop = document.getElementById("folder-picker-backdrop");
+    var form = document.getElementById("folder-picker-form");
+    var nextInput = document.getElementById("folder-picker-next");
+    var closeBtn = document.getElementById("folder-picker-close-btn");
+
+    function openPicker(itemId, next) {
+      form.action = "/favorites/" + itemId + "/folder";
+      nextInput.value = next;
+      backdrop.hidden = false;
+    }
+    function closePicker() { backdrop.hidden = true; }
+
+    document.querySelectorAll(".quick-fav-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        openPicker(btn.dataset.itemId, btn.dataset.next);
+      });
+    });
+
+    closeBtn.addEventListener("click", closePicker);
+    backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closePicker(); });
+  })();
+</script>
+{% endif %}

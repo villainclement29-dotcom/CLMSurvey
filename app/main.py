@@ -149,9 +149,16 @@ def article(request: Request, item_id: int):
         if item is None:
             raise HTTPException(status_code=404, detail="Article introuvable")
         favorited = is_favorited(conn, item_id)
+        folders = list_folders(conn)
     return templates.TemplateResponse(
         "summary.html",
-        {"request": request, "item": item, "cat_icons": CATEGORY_ICONS, "favorited": favorited},
+        {
+            "request": request,
+            "item": item,
+            "cat_icons": CATEGORY_ICONS,
+            "favorited": favorited,
+            "folders": folders,
+        },
     )
 
 

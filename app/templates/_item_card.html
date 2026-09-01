@@ -1,22 +1,28 @@
 <li class="item-wrapper">
   <div class="fav-controls">
+    {% if item.folder_id is defined %}
     <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
       <input type="hidden" name="next" value="{{ next_url }}">
-      <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
-              title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
-        {{ '♥' if item.id in favorited_ids else '♡' }}
-      </button>
+      <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
     </form>
     {% if folders is defined %}
     <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-quick-form">
       <input type="hidden" name="next" value="{{ next_url }}">
-      <select name="folder_id" onchange="this.form.submit()" title="Ajouter à un dossier de favoris">
-        <option value="none" {{ 'selected' if (item.folder_id is not defined) or (item.folder_id is none) else '' }}>Non classé</option>
+      <select name="folder_id" onchange="this.form.submit()" title="Déplacer vers un dossier">
+        <option value="none" {{ 'selected' if item.folder_id is none else '' }}>Non classé</option>
         {% for f in folders %}
-        <option value="{{ f.id }}" {{ 'selected' if (item.folder_id is defined) and (f.id == item.folder_id) else '' }}>{{ f.name }}</option>
+        <option value="{{ f.id }}" {{ 'selected' if f.id == item.folder_id else '' }}>{{ f.name }}</option>
         {% endfor %}
       </select>
     </form>
+    {% endif %}
+    {% elif item.id in favorited_ids %}
+    <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
+    </form>
+    {% else %}
+    <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="{{ next_url }}" title="Ajouter aux favoris">♡</button>
     {% endif %}
   </div>
   <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">

@@ -24,13 +24,15 @@
         🔗 Source originale — {{ item.source }}
       </a>
       <span class="published-date">{{ item.published_at | date }}</span>
+      {% if favorited %}
       <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
         <input type="hidden" name="next" value="/article/{{ item.id }}">
-        <button type="submit" class="fav-btn {{ 'active' if favorited else '' }}"
-                title="{{ 'Retirer des favoris' if favorited else 'Ajouter aux favoris' }}">
-          {{ '♥ Dans les favoris' if favorited else '♡ Ajouter aux favoris' }}
-        </button>
+        <button type="submit" class="fav-btn active" title="Retirer des favoris">♥ Dans les favoris</button>
       </form>
+      {% else %}
+      <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="/article/{{ item.id }}"
+              title="Ajouter aux favoris">♡ Ajouter aux favoris</button>
+      {% endif %}
     </div>
 
     {% if item.ai_summary %}
@@ -62,6 +64,7 @@
       </script>
     {% endif %}
   </article>
+  {% include "_folder_picker_modal.html" %}
   {% include "_sidebar_panel.html" %}
 </body>
 </html>
