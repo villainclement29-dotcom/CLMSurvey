@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calendrier — Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% include "_pwa_head.html" %}
 </head>
 <body>
   <header>
-    <h1>📅 Calendrier</h1>
-    <a class="favorites-link" href="/">← Accueil</a>
+    <div class="header-left">
+      {% include "_sidebar.html" %}
+      <h1>📅 Calendrier</h1>
+    </div>
   </header>
 
   {% if groups %}

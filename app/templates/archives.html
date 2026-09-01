@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Archives — Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% include "_pwa_head.html" %}
 </head>
 <body>
   <header>
-    <h1>🗄 Archives</h1>
-    <a class="favorites-link" href="/">← Aujourd'hui</a>
+    <div class="header-left">
+      {% include "_sidebar.html" %}
+      <h1>🗄 Archives</h1>
+    </div>
   </header>
 
-  <nav class="filters">
-    {% for cat in categories %}
-      <a href="/archives?category={{ cat }}" class="{{ 'active' if cat == selected else '' }}">
-        {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %}
-        {{ cat }}
-      </a>
-    {% endfor %}
-  </nav>
+  <form method="get" action="/archives" class="search-form">
+    <input type="hidden" name="category" value="{{ selected }}">
+    <input type="search" name="q" value="{{ search }}" placeholder="Rechercher un article...">
+    <button type="submit">Rechercher</button>
+    {% if search %}
+    <a class="clear-search" href="/archives?category={{ selected }}">✕ Effacer</a>
+    {% endif %}
+  </form>
 
   {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
   {% for label, group_items, total in groups %}
@@ -35,11 +38,13 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="empty">Aucun article dans les archives pour l'instant.</p>
+    <p class="empty">
+      {% if search %}Aucun résultat pour « {{ search }} ».{% else %}Aucun article dans les archives pour l'instant.{% endif %}
+    </p>
   {% endfor %}
 
   {% if has_more %}
-  <a class="load-more" href="/archives?category={{ selected }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
+  <a class="load-more" href="/archives?category={{ selected }}&q={{ search }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
   {% endif %}
 </body>
 </html>

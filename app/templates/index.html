@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% include "_pwa_head.html" %}
 </head>
 <body>
   <header>
-    <h1>Veille scientifique</h1>
+    <div class="header-left">
+      {% include "_sidebar.html" %}
+      <h1>Veille scientifique</h1>
+    </div>
     <div class="header-actions">
-      <a class="favorites-link" href="/calendar">📅 Calendrier</a>
-      <a class="favorites-link" href="/archives">🗄 Archives</a>
-      <a class="favorites-link" href="/favorites">★ Favoris</a>
       <form method="post" action="/refresh">
         <button type="submit">Rafraîchir</button>
       </form>
@@ -22,15 +23,6 @@
   {% if refreshed is not none %}
   <p class="flash">{{ refreshed }} nouvel(le/aux) article(s) ajouté(s).</p>
   {% endif %}
-
-  <nav class="filters">
-    {% for cat in categories %}
-      <a href="/?category={{ cat }}" class="{{ 'active' if cat == selected else '' }}">
-        {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %}
-        {{ cat }}
-      </a>
-    {% endfor %}
-  </nav>
 
   {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
   <h2 class="date-heading">

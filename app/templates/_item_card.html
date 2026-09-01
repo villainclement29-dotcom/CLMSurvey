@@ -1,11 +1,24 @@
 <li class="item-wrapper">
-  <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
-    <input type="hidden" name="next" value="{{ next_url }}">
-    <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
-            title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
-      {{ '★' if item.id in favorited_ids else '☆' }}
-    </button>
-  </form>
+  <div class="fav-controls">
+    <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button type="submit" class="fav-btn {{ 'active' if item.id in favorited_ids else '' }}"
+              title="{{ 'Retirer des favoris' if item.id in favorited_ids else 'Ajouter aux favoris' }}">
+        {{ '★' if item.id in favorited_ids else '☆' }}
+      </button>
+    </form>
+    {% if folders is defined %}
+    <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-quick-form">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <select name="folder_id" onchange="this.form.submit()" title="Ajouter à un dossier de favoris">
+        <option value="none" {{ 'selected' if (item.folder_id is not defined) or (item.folder_id is none) else '' }}>Non classé</option>
+        {% for f in folders %}
+        <option value="{{ f.id }}" {{ 'selected' if (item.folder_id is defined) and (f.id == item.folder_id) else '' }}>{{ f.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    {% endif %}
+  </div>
   <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
     <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
     <span class="title">{{ item.title }}</span>

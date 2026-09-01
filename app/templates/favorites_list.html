@@ -5,39 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }} — Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% include "_pwa_head.html" %}
 </head>
 <body>
   <header>
-    <h1>📁 {{ title }}</h1>
-    <a class="favorites-link" href="/favorites">← Dossiers</a>
+    <div class="header-left">
+      {% include "_sidebar.html" %}
+      <h1>📁 {{ title }}</h1>
+    </div>
   </header>
 
+  {% set next_url = next %}
   {% if items %}
   <ul class="items">
     {% for item in items %}
-    <li class="item-wrapper">
-      <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
-        <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit" class="fav-btn active" title="Retirer des favoris">★</button>
-      </form>
-      <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
-        <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
-        <span class="title">{{ item.title }}</span>
-        <span class="meta">
-          <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">
-          {{ item.source }} · {{ item.published_at | date }}
-        </span>
-      </a>
-      <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-select-form">
-        <input type="hidden" name="next" value="{{ next }}">
-        <select name="folder_id" onchange="this.form.submit()">
-          <option value="none" {{ 'selected' if current_folder_id is none else '' }}>Non classé</option>
-          {% for f in folders %}
-          <option value="{{ f.id }}" {{ 'selected' if f.id == current_folder_id else '' }}>{{ f.name }}</option>
-          {% endfor %}
-        </select>
-      </form>
-    </li>
+    {% include "_item_card.html" %}
     {% endfor %}
   </ul>
   {% else %}

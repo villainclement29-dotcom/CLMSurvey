@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ item.title }} — Résumé</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% include "_pwa_head.html" %}
 </head>
 <body>
-  <a class="back-link" href="/">← Retour à la liste</a>
+  <header>
+    <div class="header-left">
+      {% include "_sidebar.html" %}
+      <a class="back-link" href="/">← Retour à la liste</a>
+    </div>
+  </header>
 
   <article class="summary-card" data-category="{{ item.category }}">
     <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>

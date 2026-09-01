@@ -125,13 +125,17 @@ def insert_item(conn, source: str, category: str, title: str, url: str, summary:
     return rows[0]["id"]
 
 
-def list_items(conn, category: str | None = None, limit: int = 60):
+def list_items(conn, category: str | None = None, limit: int = 60, search: str | None = None):
+    clauses, params = [], []
     if category and category != "Toutes":
-        return conn.execute(
-            "SELECT * FROM items WHERE category = ? ORDER BY published_at DESC LIMIT ?",
-            (category, limit),
-        )
-    return conn.execute("SELECT * FROM items ORDER BY published_at DESC LIMIT ?", (limit,))
+        clauses.append("category = ?")
+        params.append(category)
+    if search:
+        clauses.append("(title LIKE ? OR summary LIKE ?)")
+        params.extend([f"%{search}%", f"%{search}%"])
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    params.append(limit)
+    return conn.execute(f"SELECT * FROM items {where} ORDER BY published_at DESC LIMIT ?", tuple(params))
 
 
 def get_item(conn, item_id: int):

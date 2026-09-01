@@ -7,7 +7,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, Form, Header, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -43,6 +43,13 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
+@app.get("/sw.js")
+def service_worker():
+    """Servi à la racine (pas sous /static) pour que le scope du service
+    worker couvre tout le site, pas seulement /static/."""
+    return FileResponse(str(BASE_DIR / "static" / "sw.js"), media_type="application/javascript")
+
+
 def favicon_url(article_url: str) -> str:
     domain = urlparse(article_url).netloc
     return f"https://www.google.com/s2/favicons?sz=32&domain={domain}"
@@ -64,6 +71,7 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
     with get_conn() as conn:
         items = list_items(conn, category, limit=HOME_POOL_LIMIT)
         favorited_ids = favorited_item_ids(conn)
+        folders = list_folders(conn)
     today_items, _ = split_today(items)
     kept_items, total_today = rank_and_cap_single(today_items, max_items=MAX_PER_DAY)
     return templates.TemplateResponse(
@@ -77,19 +85,27 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
             "refreshed": refreshed,
             "cat_icons": CATEGORY_ICONS,
             "favorited_ids": favorited_ids,
+            "folders": folders,
         },
     )
 
 
 @app.get("/archives")
-def archives(request: Request, category: str = "Toutes", limit: int = PAGE_SIZE):
+def archives(request: Request, category: str = "Toutes", q: str = "", limit: int = PAGE_SIZE):
+    search = q.strip() or None
     with get_conn() as conn:
-        items = list_items(conn, category, limit=limit + 1)
+        items = list_items(conn, category, limit=limit + 1, search=search)
         favorited_ids = favorited_item_ids(conn)
+        folders = list_folders(conn)
     has_more = len(items) > limit
     items = items[:limit]
-    _, older_items = split_today(items)
-    groups = [g for g in rank_and_cap(group_by_date(older_items), max_per_group=MAX_PER_DAY) if g[1]]
+    if search:
+        # Résultats de recherche : liste plate (toutes dates confondues),
+        # pas de regroupement par jour ni de plafond de pertinence.
+        groups = [(f"Résultats pour « {search} »", items, len(items))] if items else []
+    else:
+        _, older_items = split_today(items)
+        groups = [g for g in rank_and_cap(group_by_date(older_items), max_per_group=MAX_PER_DAY) if g[1]]
     return templates.TemplateResponse(
         "archives.html",
         {
@@ -97,11 +113,13 @@ def archives(request: Request, category: str = "Toutes", limit: int = PAGE_SIZE)
             "groups": groups,
             "categories": ["Toutes"] + CATEGORIES,
             "selected": category,
+            "search": q,
             "limit": limit,
             "page_size": PAGE_SIZE,
             "has_more": has_more,
             "cat_icons": CATEGORY_ICONS,
             "favorited_ids": favorited_ids,
+            "folders": folders,
         },
     )
 
@@ -172,6 +190,7 @@ def favorites_unclassified(request: Request):
     with get_conn() as conn:
         items = list_favorites(conn, only_unclassified=True)
         folders = list_folders(conn)
+        favorited_ids = favorited_item_ids(conn)
     return templates.TemplateResponse(
         "favorites_list.html",
         {
@@ -179,7 +198,7 @@ def favorites_unclassified(request: Request):
             "title": "Non classés",
             "items": items,
             "folders": folders,
-            "current_folder_id": None,
+            "favorited_ids": favorited_ids,
             "cat_icons": CATEGORY_ICONS,
             "next": "/favorites/unclassified",
         },
@@ -194,6 +213,7 @@ def favorites_folder(request: Request, folder_id: int):
             raise HTTPException(status_code=404, detail="Dossier introuvable")
         items = list_favorites(conn, folder_id=folder_id)
         folders = list_folders(conn)
+        favorited_ids = favorited_item_ids(conn)
     return templates.TemplateResponse(
         "favorites_list.html",
         {
@@ -201,7 +221,7 @@ def favorites_folder(request: Request, folder_id: int):
             "title": folder["name"],
             "items": items,
             "folders": folders,
-            "current_folder_id": folder_id,
+            "favorited_ids": favorited_ids,
             "cat_icons": CATEGORY_ICONS,
             "next": f"/favorites/folder/{folder_id}",
         },
@@ -224,6 +244,10 @@ def create_folder_route(name: str = Form(...), item_ids: list[int] = Form(defaul
 def assign_favorite_folder(item_id: int, folder_id: str = Form(...), next: str = Form("/favorites")):
     fid = int(folder_id) if folder_id and folder_id != "none" else None
     with get_conn() as conn:
+        if get_item(conn, item_id) is None:
+            raise HTTPException(status_code=404, detail="Article introuvable")
+        if not is_favorited(conn, item_id):
+            add_favorite(conn, item_id)
         set_favorite_folder(conn, item_id, fid)
     return RedirectResponse(url=next, status_code=303)
 
