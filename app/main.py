@@ -23,7 +23,6 @@ from app.db import (
     get_folder,
     get_item,
     init_db,
-    insert_event,
     is_favorited,
     list_favorites,
     list_folders,
@@ -105,33 +104,6 @@ def archives(request: Request, category: str = "Toutes", limit: int = PAGE_SIZE)
             "favorited_ids": favorited_ids,
         },
     )
-
-
-@app.get("/admin/backfill-events")
-def backfill_events():
-    """Route temporaire de rattrapage ponctuel : scanne les articles déjà
-    en base (jamais passés par l'extraction, qui ne tourne qu'à l'insertion)
-    pour peupler le calendrier immédiatement. À retirer après usage."""
-    from app.events import extract_event, looks_like_future_event
-
-    with get_conn() as conn:
-        items = list_items(conn, "Toutes", limit=300)
-        already = {row["item_id"] for row in conn.execute("SELECT DISTINCT item_id FROM events")}
-        checked = 0
-        extracted = 0
-        for item in items:
-            if item["id"] in already:
-                continue
-            if not looks_like_future_event(f"{item['title']} {item['summary']}"):
-                continue
-            checked += 1
-            if checked > 20:
-                break
-            event = extract_event(item["title"], item["url"], item["summary"], item["published_at"])
-            if event:
-                insert_event(conn, item["id"], event["title"], event["date"], item["category"])
-                extracted += 1
-    return {"checked": checked, "extracted": extracted}
 
 
 @app.get("/calendar")

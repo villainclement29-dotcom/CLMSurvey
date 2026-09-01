@@ -69,7 +69,6 @@ def extract_event(title: str, url: str, fallback_text: str, published_at: str) -
             ],
         )
         raw = response.choices[0].message.content.strip()
-        print(f"[events] réponse brute pour {url!r}: {raw!r}")
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
             return None
