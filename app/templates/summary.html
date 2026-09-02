@@ -16,24 +16,24 @@
   </header>
 
   <article class="summary-card" data-category="{{ item.category }}">
-    <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
+    <p class="article-kicker">{{ cat_icons.get(item.category, '') }} {{ item.category }}</p>
     <h1>{{ item.title }}</h1>
 
     <div class="summary-actions">
-      <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">
-        🔗 Source originale — {{ item.source }}
-      </a>
+      <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.source }} ↗</a>
       <span class="published-date">{{ item.published_at | date }}</span>
       {% if favorited %}
       <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
         <input type="hidden" name="next" value="/article/{{ item.id }}">
-        <button type="submit" class="fav-btn active" title="Retirer des favoris">♥ Dans les favoris</button>
+        <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
       </form>
       {% else %}
       <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="/article/{{ item.id }}"
-              title="Ajouter aux favoris">♡ Ajouter aux favoris</button>
+              title="Ajouter aux favoris">♡</button>
       {% endif %}
     </div>
+
+    <hr class="article-divider">
 
     {% if item.ai_summary %}
       <p class="summary-text">{{ item.ai_summary }}</p>
