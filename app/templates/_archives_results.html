@@ -1,0 +1,22 @@
+{% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
+{% for label, group_items, total in groups %}
+  <h2 class="date-heading">
+    {{ label }}
+    {% if total > group_items|length %}
+    <span class="date-heading-note">— {{ group_items|length }} les plus pertinents sur {{ total }}</span>
+    {% endif %}
+  </h2>
+  <ul class="items">
+    {% for item in group_items %}
+    {% include "_item_card.html" %}
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="empty">
+    {% if search %}Aucun résultat pour « {{ search }} ».{% else %}Aucun article dans les archives pour l'instant.{% endif %}
+  </p>
+{% endfor %}
+
+{% if has_more %}
+<a class="load-more" href="/archives?category={{ selected }}&q={{ search }}&limit={{ limit + page_size }}">Voir plus</a>
+{% endif %}

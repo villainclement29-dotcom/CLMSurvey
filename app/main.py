@@ -152,8 +152,12 @@ def archives(request: Request, category: str = "Toutes", q: str = "", limit: int
         groups = [(f"Résultats pour « {search} »", items, len(items))] if items else []
     else:
         groups = [g for g in rank_and_cap(group_by_date(items), max_per_group=MAX_PER_DAY) if g[1]]
+    # Chargement infini : le JS d'archives.html refait cet appel avec ce
+    # header pour ne récupérer que le fragment de résultats à ré-injecter,
+    # sans recharger toute la page.
+    template_name = "_archives_results.html" if request.headers.get("x-requested-with") == "fetch" else "archives.html"
     return templates.TemplateResponse(
-        "archives.html",
+        template_name,
         {
             "request": request,
             "groups": groups,

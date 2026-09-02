@@ -27,29 +27,57 @@
     {% endif %}
   </form>
 
-  {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
-  {% for label, group_items, total in groups %}
-    <h2 class="date-heading">
-      {{ label }}
-      {% if total > group_items|length %}
-      <span class="date-heading-note">— {{ group_items|length }} les plus pertinents sur {{ total }}</span>
-      {% endif %}
-    </h2>
-    <ul class="items">
-      {% for item in group_items %}
-      {% include "_item_card.html" %}
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="empty">
-      {% if search %}Aucun résultat pour « {{ search }} ».{% else %}Aucun article dans les archives pour l'instant.{% endif %}
-    </p>
-  {% endfor %}
+  <div id="archives-results">
+    {% include "_archives_results.html" %}
+  </div>
 
-  {% if has_more %}
-  <a class="load-more" href="/archives?category={{ selected }}&q={{ search }}&limit={{ limit + page_size }}">Voir {{ page_size }} de plus</a>
-  {% endif %}
   {% include "_folder_picker_modal.html" %}
   {% include "_sidebar_panel.html" %}
+  <script>
+    (function () {
+      var resultsEl = document.getElementById("archives-results");
+      var loading = false;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) loadMore(entry.target);
+        });
+      }, { rootMargin: "600px" });
+
+      function bindLoadMore() {
+        observer.disconnect();
+        var link = resultsEl.querySelector(".load-more");
+        if (link) observer.observe(link);
+      }
+
+      function loadMore(link) {
+        if (loading) return;
+        loading = true;
+        link.textContent = "Chargement...";
+        fetch(link.href, { headers: { "X-Requested-With": "fetch" } })
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+          })
+          .then(function (html) {
+            resultsEl.innerHTML = html;
+            loading = false;
+            bindLoadMore();
+          })
+          .catch(function () {
+            loading = false;
+            link.textContent = "Voir plus";
+          });
+      }
+
+      resultsEl.addEventListener("click", function (e) {
+        var link = e.target.closest(".load-more");
+        if (!link) return;
+        e.preventDefault();
+        loadMore(link);
+      });
+
+      bindLoadMore();
+    })();
+  </script>
 </body>
 </html>
