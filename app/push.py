@@ -32,3 +32,8 @@ def send_push(subscription_row, title: str, body: str, url: str = "/calendar") -
     except WebPushException as exc:
         status = getattr(exc.response, "status_code", None)
         return "expired" if status in (404, 410) else "error"
+    except Exception:
+        # Best-effort : une clé mal formée, un timeout réseau ou toute
+        # autre erreur inattendue ne doit jamais faire planter l'envoi
+        # groupé aux autres abonnés.
+        return "error"
