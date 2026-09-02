@@ -19,6 +19,8 @@
   <p class="flash">{{ refreshed }} nouvel(le/aux) article(s) ajouté(s).</p>
   {% endif %}
 
+  {% include "_filter_dropdown.html" %}
+
   {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
   <h2 class="date-heading">
     Aujourd'hui

@@ -1,10 +1,8 @@
 """Liste des sources suivies, regroupées par catégorie."""
 
-# Catégories affichées dans l'UI, avec leur icône (les couleurs associées
-# vivent dans app/static/style.css, indexées par le même nom de catégorie).
+# Catégories affichées dans l'UI (icônes SVG dans app/templates/_icons.html,
+# couleurs associées dans app/static/style.css — indexées par ce même nom).
 CATEGORIES = ["IA", "Espace", "Astronomie", "Physique"]
-
-CATEGORY_ICONS = {"IA": "🤖", "Espace": "🚀", "Astronomie": "🔭", "Physique": "⚛️"}
 
 # arXiv : on interroge l'API par catégorie, chaque catégorie arXiv est
 # mappée vers une catégorie affichée. cs.AI/cs.LG/cs.CV/cs.RO/cs.CL couvrent

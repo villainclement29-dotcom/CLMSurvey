@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.collector import run_collection
-from app.config import CATEGORIES, CATEGORY_ICONS
+from app.config import CATEGORIES
 from app.db import (
     add_favorite,
     assign_favorites_to_folder,
@@ -92,7 +92,6 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
             "categories": ["Toutes"] + CATEGORIES,
             "selected": category,
             "refreshed": refreshed,
-            "cat_icons": CATEGORY_ICONS,
             "favorited_ids": favorited_ids,
             "folders": folders,
         },
@@ -126,7 +125,6 @@ def archives(request: Request, category: str = "Toutes", q: str = "", limit: int
             "limit": limit,
             "page_size": PAGE_SIZE,
             "has_more": has_more,
-            "cat_icons": CATEGORY_ICONS,
             "favorited_ids": favorited_ids,
             "folders": folders,
         },
@@ -141,7 +139,7 @@ def calendar_page(request: Request):
     groups = group_events_by_date(events)
     return templates.TemplateResponse(
         "calendar.html",
-        {"request": request, "groups": groups, "cat_icons": CATEGORY_ICONS},
+        {"request": request, "groups": groups},
     )
 
 
@@ -164,7 +162,6 @@ def article(request: Request, item_id: int):
         {
             "request": request,
             "item": item,
-            "cat_icons": CATEGORY_ICONS,
             "favorited": favorited,
             "folders": folders,
         },
@@ -212,10 +209,10 @@ def favorites_unclassified(request: Request):
         {
             "request": request,
             "title": "Non classés",
+            "unclassified": True,
             "items": items,
             "folders": folders,
             "favorited_ids": favorited_ids,
-            "cat_icons": CATEGORY_ICONS,
             "next": "/favorites/unclassified",
         },
     )
@@ -238,7 +235,6 @@ def favorites_folder(request: Request, folder_id: int):
             "items": items,
             "folders": folders,
             "favorited_ids": favorited_ids,
-            "cat_icons": CATEGORY_ICONS,
             "next": f"/favorites/folder/{folder_id}",
         },
     )

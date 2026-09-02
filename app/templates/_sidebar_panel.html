@@ -1,25 +1,14 @@
+{% import "_icons.html" as icons %}
 <div class="sidebar-backdrop" id="sidebar-backdrop" hidden>
   <nav class="sidebar">
     <button type="button" class="sidebar-close" id="sidebar-close-btn" aria-label="Fermer le menu">&times;</button>
 
     <div class="sidebar-section">
-      <a href="/" class="sidebar-link {{ 'active' if request.url.path == '/' else '' }}">🏠 Accueil</a>
-      <a href="/calendar" class="sidebar-link {{ 'active' if request.url.path == '/calendar' else '' }}">📅 Calendrier</a>
-      <a href="/archives" class="sidebar-link {{ 'active' if request.url.path == '/archives' else '' }}">🗄 Archives</a>
-      <a href="/favorites" class="sidebar-link {{ 'active' if '/favorites' in request.url.path else '' }}">♥ Favoris</a>
+      <a href="/" class="sidebar-link {{ 'active' if request.url.path == '/' else '' }}">{{ icons.home() }} Accueil</a>
+      <a href="/calendar" class="sidebar-link {{ 'active' if request.url.path == '/calendar' else '' }}">{{ icons.calendar() }} Calendrier</a>
+      <a href="/archives" class="sidebar-link {{ 'active' if request.url.path == '/archives' else '' }}">{{ icons.archive() }} Archives</a>
+      <a href="/favorites" class="sidebar-link {{ 'active' if '/favorites' in request.url.path else '' }}">{{ icons.heart() }} Favoris</a>
     </div>
-
-    {% if categories is defined %}
-    {% set base = '/archives' if request.url.path == '/archives' else '/' %}
-    <div class="sidebar-section">
-      <span class="sidebar-section-title">Catégories</span>
-      {% for cat in categories %}
-      <a href="{{ base }}?category={{ cat }}" class="sidebar-link {{ 'active' if cat == selected else '' }}">
-        {% if cat in cat_icons %}<span class="icon">{{ cat_icons[cat] }}</span>{% endif %} {{ cat }}
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
   </nav>
 </div>
 

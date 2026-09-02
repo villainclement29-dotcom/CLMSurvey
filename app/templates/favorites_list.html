@@ -8,10 +8,11 @@
   {% include "_pwa_head.html" %}
 </head>
 <body>
+  {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
-      <h1>📁 {{ title }}</h1>
+      <h1>{{ icons.inbox() if unclassified is defined else icons.folder() }} {{ title }}</h1>
     </div>
   </header>
 

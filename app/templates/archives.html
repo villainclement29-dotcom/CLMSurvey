@@ -8,19 +8,22 @@
   {% include "_pwa_head.html" %}
 </head>
 <body>
+  {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
-      <h1>🗄 Archives</h1>
+      <h1>{{ icons.archive() }} Archives</h1>
     </div>
   </header>
+
+  {% include "_filter_dropdown.html" %}
 
   <form method="get" action="/archives" class="search-form">
     <input type="hidden" name="category" value="{{ selected }}">
     <input type="search" name="q" value="{{ search }}" placeholder="Rechercher un article...">
     <button type="submit">Rechercher</button>
     {% if search %}
-    <a class="clear-search" href="/archives?category={{ selected }}">✕ Effacer</a>
+    <a class="clear-search" href="/archives?category={{ selected }}">&times; Effacer</a>
     {% endif %}
   </form>
 

@@ -1,0 +1,34 @@
+{% import "_icons.html" as icons %}
+{% if categories is defined %}
+{% set base = '/archives' if request.url.path == '/archives' else '/' %}
+<div class="filter-bar">
+  <button type="button" class="filter-toggle-btn" id="filter-toggle-btn">
+    {{ icons.filter() }} Filtrer
+    {% if selected != 'Toutes' %}<span class="filter-active-badge">{{ selected }}</span>{% endif %}
+  </button>
+  <div class="filter-dropdown" id="filter-dropdown" hidden>
+    {% for cat in categories %}
+    <a href="{{ base }}?category={{ cat }}" class="filter-dropdown-link {{ 'active' if cat == selected else '' }}">
+      {% if cat != 'Toutes' %}{{ icons.cat_icon(cat) }}{% endif %}
+      {{ cat }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById("filter-toggle-btn");
+    var dropdown = document.getElementById("filter-dropdown");
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      dropdown.hidden = !dropdown.hidden;
+    });
+    document.addEventListener("click", function (e) {
+      if (!dropdown.hidden && !dropdown.contains(e.target) && e.target !== btn) {
+        dropdown.hidden = true;
+      }
+    });
+  })();
+</script>
+{% endif %}

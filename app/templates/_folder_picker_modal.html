@@ -1,3 +1,4 @@
+{% import "_icons.html" as icons %}
 {% if folders is defined %}
 <div class="modal-backdrop" id="folder-picker-backdrop" hidden>
   <div class="modal">
@@ -8,7 +9,7 @@
       <ul class="folder-picker-list">
         <li><button type="submit" name="folder_id" value="none">Sans dossier</button></li>
         {% for f in folders %}
-        <li><button type="submit" name="folder_id" value="{{ f.id }}">📁 {{ f.name }}</button></li>
+        <li><button type="submit" name="folder_id" value="{{ f.id }}">{{ icons.folder() }} {{ f.name }}</button></li>
         {% endfor %}
       </ul>
     </form>

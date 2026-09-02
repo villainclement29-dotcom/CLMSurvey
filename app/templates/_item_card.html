@@ -1,9 +1,10 @@
+{% import "_icons.html" as icons %}
 <li class="item-wrapper">
   <div class="fav-controls">
     {% if item.folder_id is defined %}
     <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
       <input type="hidden" name="next" value="{{ next_url }}">
-      <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
+      <button type="submit" class="fav-btn active" title="Retirer des favoris">{{ icons.heart(filled=True) }}</button>
     </form>
     {% if folders is defined %}
     <form method="post" action="/favorites/{{ item.id }}/folder" class="folder-quick-form">
@@ -19,14 +20,14 @@
     {% elif item.id in favorited_ids %}
     <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
       <input type="hidden" name="next" value="{{ next_url }}">
-      <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
+      <button type="submit" class="fav-btn active" title="Retirer des favoris">{{ icons.heart(filled=True) }}</button>
     </form>
     {% else %}
-    <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="{{ next_url }}" title="Ajouter aux favoris">♡</button>
+    <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="{{ next_url }}" title="Ajouter aux favoris">{{ icons.heart() }}</button>
     {% endif %}
   </div>
   <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
-    <span class="badge">{{ cat_icons.get(item.category, '') }} {{ item.category }}</span>
+    <span class="badge">{{ icons.cat_icon(item.category) }} {{ item.category }}</span>
     <span class="title">{{ item.title }}</span>
     <span class="meta">
       <img class="favicon" src="{{ item.url | favicon }}" alt="" loading="lazy">

@@ -8,10 +8,11 @@
   {% include "_pwa_head.html" %}
 </head>
 <body>
+  {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
-      <h1>♥ Mes favoris</h1>
+      <h1>{{ icons.heart() }} Mes favoris</h1>
     </div>
   </header>
 
@@ -19,14 +20,14 @@
 
   <div class="folder-list">
     <a class="folder-row" href="/favorites/unclassified">
-      <span class="folder-icon">🗂️</span>
+      <span class="folder-icon">{{ icons.inbox() }}</span>
       <span class="folder-name">Non classés</span>
       <span class="folder-count">{{ unclassified_items|length }}</span>
       <span class="folder-chevron">›</span>
     </a>
     {% for f in folders %}
     <a class="folder-row" href="/favorites/folder/{{ f.id }}">
-      <span class="folder-icon">📁</span>
+      <span class="folder-icon">{{ icons.folder() }}</span>
       <span class="folder-name">{{ f.name }}</span>
       <span class="folder-count">{{ counts.get(f.id, 0) }}</span>
       <span class="folder-chevron">›</span>

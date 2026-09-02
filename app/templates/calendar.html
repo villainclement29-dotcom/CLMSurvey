@@ -8,10 +8,11 @@
   {% include "_pwa_head.html" %}
 </head>
 <body>
+  {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
-      <h1>📅 Calendrier</h1>
+      <h1>{{ icons.calendar() }} Calendrier</h1>
     </div>
   </header>
 
@@ -30,7 +31,7 @@
         {% for ev in events %}
         <li>
           <a class="calendar-event" data-category="{{ ev.category }}" href="/article/{{ ev.item_id }}">
-            <span class="badge">{{ cat_icons.get(ev.category, '') }} {{ ev.category }}</span>
+            <span class="badge">{{ icons.cat_icon(ev.category) }} {{ ev.category }}</span>
             <span class="calendar-event-title">{{ ev.title }}</span>
           </a>
         </li>

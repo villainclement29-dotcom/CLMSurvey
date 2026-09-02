@@ -15,21 +15,22 @@
     </div>
   </header>
 
+  {% import "_icons.html" as icons %}
   <article class="summary-card" data-category="{{ item.category }}">
-    <p class="article-kicker">{{ cat_icons.get(item.category, '') }} {{ item.category }}</p>
+    <p class="article-kicker">{{ icons.cat_icon(item.category) }} {{ item.category }}</p>
     <h1>{{ item.title }}</h1>
 
     <div class="summary-actions">
-      <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.source }} ↗</a>
+      <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.source }} {{ icons.external_link() }}</a>
       <span class="published-date">{{ item.published_at | date }}</span>
       {% if favorited %}
       <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
         <input type="hidden" name="next" value="/article/{{ item.id }}">
-        <button type="submit" class="fav-btn active" title="Retirer des favoris">♥</button>
+        <button type="submit" class="fav-btn active" title="Retirer des favoris">{{ icons.heart(filled=True) }}</button>
       </form>
       {% else %}
       <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="/article/{{ item.id }}"
-              title="Ajouter aux favoris">♡</button>
+              title="Ajouter aux favoris">{{ icons.heart() }}</button>
       {% endif %}
     </div>
 
