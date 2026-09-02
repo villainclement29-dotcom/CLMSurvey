@@ -39,11 +39,18 @@ def format_date(published_at: str) -> str:
 
 
 def split_today(items, today: date | None = None) -> tuple[list, list]:
-    """Sépare les articles en (ceux d'aujourd'hui, les plus anciens)."""
+    """Sépare les articles en (ceux collectés aujourd'hui, les plus anciens).
+
+    On se base sur fetched_at (date de collecte), pas published_at (date de
+    publication d'origine) : les flux RSS/arXiv indexent souvent un article
+    avec un published_at de la veille, même quand on le découvre pour la
+    première fois aujourd'hui. Filtrer sur published_at faisait passer la
+    quasi-totalité du contenu fraîchement collecté directement aux archives,
+    sans jamais apparaître sur l'accueil."""
     today = today or datetime.utcnow().date()
     today_items, older_items = [], []
     for item in items:
-        (today_items if _parse_date(item["published_at"]) == today else older_items).append(item)
+        (today_items if _parse_date(item["fetched_at"]) == today else older_items).append(item)
     return today_items, older_items
 
 
