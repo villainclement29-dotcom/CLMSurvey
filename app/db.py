@@ -216,7 +216,9 @@ def insert_item(conn, source: str, category: str, title: str, url: str, summary:
     return rows[0]["id"]
 
 
-def list_items(conn, category: str | None = None, limit: int = 60, search: str | None = None):
+def list_items(
+    conn, category: str | None = None, limit: int = 60, search: str | None = None, exclude_today: bool = False
+):
     clauses, params = [], []
     if category and category != "Toutes":
         clauses.append("category = ?")
@@ -224,6 +226,14 @@ def list_items(conn, category: str | None = None, limit: int = 60, search: str |
     if search:
         clauses.append("(title LIKE ? OR summary LIKE ?)")
         params.extend([f"%{search}%", f"%{search}%"])
+    if exclude_today:
+        # published_at (utilisé pour le tri) traîne souvent derrière
+        # fetched_at (date de collecte) : un article collecté aujourd'hui
+        # peut avoir un published_at de plusieurs jours en arrière. Filtrer
+        # ici, en SQL, plutôt qu'après coup sur un lot de taille limitée,
+        # garantit que `limit` correspond bien au nombre d'articles
+        # d'archives réellement disponibles (voir split_today()).
+        clauses.append("date(fetched_at) < date('now')")
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     params.append(limit)
     return conn.execute(f"SELECT * FROM items {where} ORDER BY published_at DESC LIMIT ?", tuple(params))

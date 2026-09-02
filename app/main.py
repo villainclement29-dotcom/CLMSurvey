@@ -141,7 +141,7 @@ def index(request: Request, category: str = "Toutes", refreshed: Optional[int] =
 def archives(request: Request, category: str = "Toutes", q: str = "", limit: int = PAGE_SIZE):
     search = q.strip() or None
     with get_conn() as conn:
-        items = list_items(conn, category, limit=limit + 1, search=search)
+        items = list_items(conn, category, limit=limit + 1, search=search, exclude_today=not search)
         favorited_ids = favorited_item_ids(conn)
         folders = list_folders(conn)
     has_more = len(items) > limit
@@ -151,8 +151,7 @@ def archives(request: Request, category: str = "Toutes", q: str = "", limit: int
         # pas de regroupement par jour ni de plafond de pertinence.
         groups = [(f"Résultats pour « {search} »", items, len(items))] if items else []
     else:
-        _, older_items = split_today(items)
-        groups = [g for g in rank_and_cap(group_by_date(older_items), max_per_group=MAX_PER_DAY) if g[1]]
+        groups = [g for g in rank_and_cap(group_by_date(items), max_per_group=MAX_PER_DAY) if g[1]]
     return templates.TemplateResponse(
         "archives.html",
         {
