@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Veille scientifique</title>
-  <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
+  {# style.css est chargé en non-bloquant ici : le splash (voir
+     _intro_splash.html, autonome, sans dépendance à ce fichier) sert de
+     rideau pendant ce temps, plutôt que de retarder tout affichage
+     derrière un <link> bloquant comme sur les autres pages. #}
+  <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}"></noscript>
   {% include "_pwa_head.html" %}
   <script>
     // Évite un flash de l'animation d'intro si elle a déjà été vue dans
