@@ -1,0 +1,40 @@
+<div id="intro-splash">
+  <svg viewBox="0 0 400 400" role="presentation" aria-hidden="true">
+    <circle class="intro-orbit" cx="200" cy="200" r="50"></circle>
+    <circle class="intro-orbit" cx="200" cy="200" r="85"></circle>
+    <circle class="intro-orbit" cx="200" cy="200" r="120"></circle>
+    <circle class="intro-orbit" cx="200" cy="200" r="155"></circle>
+
+    <circle class="intro-sun-glow" cx="200" cy="200" r="26"></circle>
+    <circle class="intro-sun" cx="200" cy="200" r="18"></circle>
+
+    <g class="intro-planet-orbit" style="animation-duration: 3s;">
+      <circle class="intro-planet" cx="250" cy="200" r="5" style="fill: var(--cat-espace);"></circle>
+    </g>
+    <g class="intro-planet-orbit" style="animation-duration: 5s;">
+      <circle class="intro-planet" cx="285" cy="200" r="6" style="fill: var(--cat-physique);"></circle>
+    </g>
+    <g class="intro-planet-orbit" style="animation-duration: 7.5s;">
+      <circle class="intro-planet" cx="320" cy="200" r="5" style="fill: var(--cat-ia);"></circle>
+    </g>
+    <g class="intro-planet-orbit" style="animation-duration: 10.5s;">
+      <circle class="intro-planet" cx="355" cy="200" r="7" style="fill: var(--cat-astronomie);"></circle>
+    </g>
+  </svg>
+  <p class="intro-label">Veille scientifique</p>
+</div>
+<script>
+  (function () {
+    var splash = document.getElementById("intro-splash");
+    if (!splash) return;
+    if (sessionStorage.getItem("introShown")) {
+      splash.remove();
+      return;
+    }
+    sessionStorage.setItem("introShown", "1");
+    setTimeout(function () {
+      splash.classList.add("intro-hidden");
+      setTimeout(function () { splash.remove(); }, 700);
+    }, 1800);
+  })();
+</script>

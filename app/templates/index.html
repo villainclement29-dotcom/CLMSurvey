@@ -6,8 +6,16 @@
   <title>Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
   {% include "_pwa_head.html" %}
+  <script>
+    // Évite un flash de l'animation d'intro si elle a déjà été vue dans
+    // cet onglet/cette session PWA (voir _intro_splash.html).
+    if (sessionStorage.getItem("introShown")) {
+      document.documentElement.classList.add("intro-seen");
+    }
+  </script>
 </head>
 <body>
+  {% include "_intro_splash.html" %}
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
