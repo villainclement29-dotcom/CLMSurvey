@@ -7,13 +7,10 @@
     --intro-bg: #0f1115;
     --intro-border: #2a2e37;
     --intro-muted: #9aa2af;
-    --intro-espace: #60a5fa;
-    --intro-physique: #34d399;
-    --intro-ia: #a78bfa;
-    --intro-astronomie: #fbbf24;
     position: fixed;
     inset: 0;
     z-index: 999;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -28,10 +25,6 @@
       --intro-bg: #f6f7f9;
       --intro-border: #e2e5ea;
       --intro-muted: #5b6270;
-      --intro-espace: #2563eb;
-      --intro-physique: #059669;
-      --intro-ia: #7c3aed;
-      --intro-astronomie: #b45309;
     }
   }
 
@@ -39,7 +32,22 @@
 
   #intro-splash.intro-hidden { opacity: 0; pointer-events: none; }
 
-  #intro-splash svg { width: clamp(180px, 55vw, 260px); height: auto; }
+  #intro-splash .intro-stars {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  #intro-splash .intro-stars circle { fill: var(--intro-muted); }
+
+  #intro-splash .intro-solar-system {
+    position: relative;
+    z-index: 1;
+    width: clamp(180px, 55vw, 260px);
+    height: auto;
+  }
 
   #intro-splash .intro-scene {
     transform: scaleY(0.5);
@@ -52,50 +60,112 @@
 
   #intro-splash .intro-sun-glow { fill: #f5a623; opacity: 0.25; }
 
-  #intro-splash .intro-planet-orbit { transform-origin: 200px 200px; }
+  @media (prefers-reduced-motion: no-preference) {
+    #intro-splash .intro-planet {
+      animation-name: intro-orbit-motion;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+  }
+
+  @keyframes intro-orbit-motion { to { offset-distance: 100%; } }
 
   #intro-splash .intro-label {
+    position: relative;
+    z-index: 1;
     font-family: "Times New Roman", Times, Georgia, serif;
     color: var(--intro-muted);
     font-size: 0.95rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-
-  @media (prefers-reduced-motion: no-preference) {
-    #intro-splash .intro-planet-orbit {
-      animation-name: intro-orbit;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
-    }
-  }
-
-  @keyframes intro-orbit { to { transform: rotate(360deg); } }
 </style>
 <div id="intro-splash">
-  <svg viewBox="0 0 400 400" role="presentation" aria-hidden="true">
-    <g class="intro-scene">
-      <circle class="intro-orbit" cx="200" cy="200" r="50"></circle>
-      <circle class="intro-orbit" cx="200" cy="200" r="85"></circle>
-      <circle class="intro-orbit" cx="200" cy="200" r="120"></circle>
-      <circle class="intro-orbit" cx="200" cy="200" r="155"></circle>
+  <svg class="intro-stars" viewBox="0 0 100 100" preserveAspectRatio="none" role="presentation" aria-hidden="true">
+    <circle cx="63.9" cy="2.5" r="0.23" style="opacity:0.43;"></circle>
+    <circle cx="67.7" cy="89.2" r="0.18" style="opacity:0.55;"></circle>
+    <circle cx="21.9" cy="50.5" r="0.16" style="opacity:0.42;"></circle>
+    <circle cx="54.5" cy="22.0" r="0.33" style="opacity:0.79;"></circle>
+    <circle cx="80.6" cy="69.8" r="0.25" style="opacity:0.39;"></circle>
+    <circle cx="33.7" cy="9.3" r="0.18" style="opacity:0.81;"></circle>
+    <circle cx="80.7" cy="73.0" r="0.31" style="opacity:0.88;"></circle>
+    <circle cx="55.2" cy="82.9" r="0.34" style="opacity:0.82;"></circle>
+    <circle cx="70.5" cy="4.6" r="0.22" style="opacity:0.47;"></circle>
+    <circle cx="23.3" cy="10.1" r="0.23" style="opacity:0.68;"></circle>
+    <circle cx="37.0" cy="21.0" r="0.23" style="opacity:0.86;"></circle>
+    <circle cx="60.9" cy="17.1" r="0.37" style="opacity:0.4;"></circle>
+    <circle cx="99.0" cy="64.0" r="0.32" style="opacity:0.71;"></circle>
+    <circle cx="77.6" cy="22.9" r="0.16" style="opacity:0.49;"></circle>
+    <circle cx="21.1" cy="94.3" r="0.41" style="opacity:0.49;"></circle>
+    <circle cx="39.6" cy="91.5" r="0.29" style="opacity:0.46;"></circle>
+    <circle cx="56.1" cy="26.3" r="0.33" style="opacity:0.84;"></circle>
+    <circle cx="21.9" cy="99.8" r="0.3" style="opacity:0.35;"></circle>
+    <circle cx="11.0" cy="62.7" r="0.39" style="opacity:0.55;"></circle>
+    <circle cx="38.2" cy="99.6" r="0.31" style="opacity:0.88;"></circle>
+    <circle cx="1.1" cy="72.1" r="0.35" style="opacity:0.62;"></circle>
+    <circle cx="64.1" cy="11.2" r="0.28" style="opacity:0.57;"></circle>
+    <circle cx="87.6" cy="26.3" r="0.3" style="opacity:0.41;"></circle>
+    <circle cx="87.1" cy="29.8" r="0.34" style="opacity:0.67;"></circle>
+    <circle cx="76.3" cy="53.9" r="0.38" style="opacity:0.62;"></circle>
+    <circle cx="32.4" cy="1.9" r="0.43" style="opacity:0.83;"></circle>
+    <circle cx="30.8" cy="5.8" r="0.41" style="opacity:0.87;"></circle>
+    <circle cx="48.6" cy="6.9" r="0.38" style="opacity:0.76;"></circle>
+    <circle cx="47.5" cy="55.0" r="0.23" style="opacity:0.82;"></circle>
+    <circle cx="21.2" cy="53.9" r="0.37" style="opacity:0.42;"></circle>
+    <circle cx="99.5" cy="65.0" r="0.28" style="opacity:0.61;"></circle>
+    <circle cx="22.5" cy="33.8" r="0.33" style="opacity:0.44;"></circle>
+    <circle cx="7.1" cy="63.1" r="0.22" style="opacity:0.84;"></circle>
+    <circle cx="7.1" cy="23.8" r="0.35" style="opacity:0.43;"></circle>
+    <circle cx="93.6" cy="57.1" r="0.29" style="opacity:0.77;"></circle>
+    <circle cx="19.0" cy="9.7" r="0.28" style="opacity:0.55;"></circle>
+    <circle cx="72.9" cy="67.3" r="0.45" style="opacity:0.36;"></circle>
+    <circle cx="33.9" cy="86.2" r="0.22" style="opacity:0.41;"></circle>
+    <circle cx="42.2" cy="27.9" r="0.22" style="opacity:0.85;"></circle>
+    <circle cx="86.1" cy="55.0" r="0.17" style="opacity:0.9;"></circle>
+    <circle cx="96.9" cy="92.6" r="0.4" style="opacity:0.4;"></circle>
+    <circle cx="21.4" cy="40.1" r="0.17" style="opacity:0.53;"></circle>
+    <circle cx="26.5" cy="78.4" r="0.29" style="opacity:0.55;"></circle>
+    <circle cx="99.5" cy="55.6" r="0.37" style="opacity:0.39;"></circle>
+    <circle cx="96.9" cy="57.9" r="0.31" style="opacity:0.75;"></circle>
+    <circle cx="58.4" cy="50.3" r="0.41" style="opacity:0.39;"></circle>
+    <circle cx="8.0" cy="18.6" r="0.33" style="opacity:0.71;"></circle>
+    <circle cx="12.0" cy="89.0" r="0.22" style="opacity:0.66;"></circle>
+    <circle cx="41.9" cy="58.4" r="0.31" style="opacity:0.86;"></circle>
+    <circle cx="71.6" cy="23.9" r="0.27" style="opacity:0.7;"></circle>
+    <circle cx="31.6" cy="75.2" r="0.17" style="opacity:0.57;"></circle>
+    <circle cx="99.6" cy="7.3" r="0.21" style="opacity:0.46;"></circle>
+    <circle cx="88.1" cy="87.9" r="0.26" style="opacity:0.39;"></circle>
+    <circle cx="70.4" cy="61.2" r="0.45" style="opacity:0.69;"></circle>
+    <circle cx="81.7" cy="29.9" r="0.35" style="opacity:0.86;"></circle>
+  </svg>
 
-      <g class="intro-planet-orbit" style="animation-duration: 3s;">
-        <circle class="intro-planet" cx="250" cy="200" r="5" style="fill: var(--intro-espace);"></circle>
-      </g>
-      <g class="intro-planet-orbit" style="animation-duration: 5s;">
-        <circle class="intro-planet" cx="285" cy="200" r="6" style="fill: var(--intro-physique);"></circle>
-      </g>
-      <g class="intro-planet-orbit" style="animation-duration: 7.5s;">
-        <circle class="intro-planet" cx="320" cy="200" r="5" style="fill: var(--intro-ia);"></circle>
-      </g>
-      <g class="intro-planet-orbit" style="animation-duration: 10.5s;">
-        <circle class="intro-planet" cx="355" cy="200" r="7" style="fill: var(--intro-astronomie);"></circle>
-      </g>
+  <svg class="intro-solar-system" viewBox="0 0 400 400" role="presentation" aria-hidden="true">
+    <g class="intro-scene">
+      <circle class="intro-orbit" cx="200" cy="200" r="38"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="54"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="70"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="88"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="108"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="130"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="152"></circle>
+      <circle class="intro-orbit" cx="200" cy="200" r="174"></circle>
     </g>
 
     <circle class="intro-sun-glow" cx="200" cy="200" r="26"></circle>
     <circle class="intro-sun" cx="200" cy="200" r="18"></circle>
+
+    {# Chaque planète se déplace le long d'un chemin CSS (offset-path)
+       défini comme une ellipse (vue isométrique) : la trajectoire est
+       aplatie, mais la planète elle-même (cx/cy à 0, positionnée
+       uniquement par offset-path) reste parfaitement ronde. #}
+    <circle class="intro-planet" cx="0" cy="0" r="3" style="fill: #9e9e9e; offset-path: path('M 238,200 A 38,19 0 1,1 162,200 A 38,19 0 1,1 238,200'); animation-duration: 3s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="4.3" style="fill: #e0c16c; offset-path: path('M 254,200 A 54,27 0 1,1 146,200 A 54,27 0 1,1 254,200'); animation-duration: 4s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="4.3" style="fill: #4f86c6; offset-path: path('M 270,200 A 70,35 0 1,1 130,200 A 70,35 0 1,1 270,200'); animation-duration: 5.2s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="3.4" style="fill: #c1440e; offset-path: path('M 288,200 A 88,44 0 1,1 112,200 A 88,44 0 1,1 288,200'); animation-duration: 6.6s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="6.5" style="fill: #e0a96d; offset-path: path('M 308,200 A 108,54 0 1,1 92,200 A 108,54 0 1,1 308,200'); animation-duration: 8.5s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="6" style="fill: #e8d19c; offset-path: path('M 330,200 A 130,65 0 1,1 70,200 A 130,65 0 1,1 330,200'); animation-duration: 11s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="4.8" style="fill: #7fd4d9; offset-path: path('M 352,200 A 152,76 0 1,1 48,200 A 152,76 0 1,1 352,200'); animation-duration: 14s;"></circle>
+    <circle class="intro-planet" cx="0" cy="0" r="4.8" style="fill: #3b5bdb; offset-path: path('M 374,200 A 174,87 0 1,1 26,200 A 174,87 0 1,1 374,200'); animation-duration: 17s;"></circle>
   </svg>
   <p class="intro-label">Veille scientifique</p>
 </div>
