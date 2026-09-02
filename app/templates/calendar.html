@@ -14,26 +14,43 @@
       {% include "_sidebar_toggle.html" %}
       <h1>{{ icons.calendar() }} Calendrier</h1>
     </div>
+    <div class="header-actions">
+      <button type="button" id="notif-toggle-btn" class="icon-only-btn" title="Activer les notifications">{{ icons.bell() }}</button>
+      <button type="button" id="open-event-modal-btn" class="icon-only-btn" title="Ajouter un événement">{{ icons.plus() }}</button>
+    </div>
   </header>
 
   {% if groups %}
+  {% set ns = namespace(current_month=None) %}
   <div class="calendar-list">
     {% for event_date, events in groups %}
+    {% set month_key = event_date[:7] %}
+    {% if month_key != ns.current_month %}
+    <h2 class="calendar-month-heading">{{ event_date | month_year }}</h2>
+    {% set ns.current_month = month_key %}
+    {% endif %}
     <div class="calendar-day">
       <div class="calendar-date">
-        <span class="calendar-date-main">{{ event_date | date }}</span>
-        {% set d = event_date | days_until %}
-        <span class="calendar-date-relative">
-          {% if d == 0 %}aujourd'hui{% elif d == 1 %}demain{% else %}dans {{ d }} jours{% endif %}
-        </span>
+        <span class="calendar-weekday">{{ event_date | weekday }}</span>
+        <span class="calendar-day-number {{ 'is-today' if event_date | is_today else '' }}">{{ event_date | day_number }}</span>
       </div>
       <ul class="calendar-events">
         {% for ev in events %}
-        <li>
-          <a class="calendar-event" data-category="{{ ev.category }}" href="/article/{{ ev.item_id }}">
-            <span class="badge">{{ icons.cat_icon(ev.category) }} {{ ev.category }}</span>
+        <li class="calendar-event-row">
+          {% if ev.item_id %}
+          <a class="calendar-event" href="/article/{{ ev.item_id }}">
+            <span class="calendar-event-dot" data-category="{{ ev.category }}"></span>
             <span class="calendar-event-title">{{ ev.title }}</span>
           </a>
+          {% else %}
+          <span class="calendar-event">
+            <span class="calendar-event-dot" data-category="{{ ev.category }}"></span>
+            <span class="calendar-event-title">{{ ev.title }}</span>
+          </span>
+          {% endif %}
+          <form method="post" action="/calendar/events/{{ ev.id }}/delete">
+            <button type="submit" class="calendar-event-delete" title="Supprimer l'événement">&times;</button>
+          </form>
         </li>
         {% endfor %}
       </ul>
@@ -42,11 +59,100 @@
   </div>
   {% else %}
   <p class="empty">
-    Aucun événement futur détecté pour l'instant. Le calendrier se remplit
+    Aucun événement futur pour l'instant. Le calendrier se remplit
     automatiquement quand un article annonce une date précise (lancement,
-    sortie spatiale, publication...).
+    sortie spatiale, publication...), ou ajoutez-en un vous-même avec le
+    bouton +.
   </p>
   {% endif %}
+
+  <div class="modal-backdrop" id="event-modal-backdrop" hidden>
+    <div class="modal">
+      <button type="button" class="modal-close" id="event-modal-close-btn" aria-label="Fermer">&times;</button>
+      <h2>Nouvel événement</h2>
+      <form method="post" action="/calendar/events" class="event-form">
+        <input type="text" name="title" placeholder="Titre de l'événement" maxlength="200" required>
+        <input type="date" name="event_date" required>
+        <select name="category" required>
+          <option value="" disabled selected>Catégorie</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Créer l'événement</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var openBtn = document.getElementById("open-event-modal-btn");
+      var closeBtn = document.getElementById("event-modal-close-btn");
+      var backdrop = document.getElementById("event-modal-backdrop");
+      openBtn.addEventListener("click", function () { backdrop.hidden = false; });
+      closeBtn.addEventListener("click", function () { backdrop.hidden = true; });
+      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) backdrop.hidden = true; });
+    })();
+
+    (function () {
+      var btn = document.getElementById("notif-toggle-btn");
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        btn.hidden = true;
+        return;
+      }
+
+      function urlBase64ToUint8Array(base64String) {
+        var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        var rawData = atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+      }
+
+      async function refreshState() {
+        try {
+          var reg = await navigator.serviceWorker.ready;
+          var sub = await reg.pushManager.getSubscription();
+          btn.dataset.subscribed = sub ? "1" : "0";
+          btn.title = sub ? "Désactiver les notifications" : "Activer les notifications";
+        } catch (e) {
+          btn.hidden = true;
+        }
+      }
+
+      btn.addEventListener("click", async function () {
+        var reg = await navigator.serviceWorker.ready;
+        if (btn.dataset.subscribed === "1") {
+          var sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await fetch("/push/unsubscribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ endpoint: sub.endpoint }),
+            });
+            await sub.unsubscribe();
+          }
+        } else {
+          var permission = await Notification.requestPermission();
+          if (permission !== "granted") return;
+          var newSub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array("{{ VAPID_PUBLIC_KEY }}"),
+          });
+          var json = newSub.toJSON();
+          await fetch("/push/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+          });
+        }
+        refreshState();
+      });
+
+      refreshState();
+    })();
+  </script>
   {% include "_sidebar_panel.html" %}
 </body>
 </html>

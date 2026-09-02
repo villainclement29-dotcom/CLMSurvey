@@ -7,6 +7,8 @@ MONTHS_FR = [
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
 ]
 
+WEEKDAYS_FR_ABBR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+
 
 def _parse_date(published_at: str) -> date | None:
     if not published_at:
@@ -85,3 +87,24 @@ def days_until(event_date: str, today: date | None = None) -> int:
     today = today or datetime.utcnow().date()
     d = date.fromisoformat(event_date)
     return (d - today).days
+
+
+def weekday_label(event_date: str) -> str:
+    """Abréviation du jour de la semaine, ex: 'Mer'."""
+    d = date.fromisoformat(event_date)
+    return WEEKDAYS_FR_ABBR[d.weekday()]
+
+
+def day_number(event_date: str) -> int:
+    return date.fromisoformat(event_date).day
+
+
+def month_year_label(event_date: str) -> str:
+    """Ex: 'Septembre 2026'."""
+    d = date.fromisoformat(event_date)
+    return f"{MONTHS_FR[d.month - 1].capitalize()} {d.year}"
+
+
+def is_today_str(event_date: str, today: date | None = None) -> bool:
+    today = today or datetime.utcnow().date()
+    return date.fromisoformat(event_date) == today

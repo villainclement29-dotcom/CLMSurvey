@@ -51,7 +51,7 @@ SCHEMA_STATEMENTS = [
     """
     CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_id INTEGER NOT NULL REFERENCES items(id),
+        item_id INTEGER REFERENCES items(id),
         title TEXT NOT NULL,
         event_date TEXT NOT NULL,
         category TEXT NOT NULL,
@@ -59,6 +59,15 @@ SCHEMA_STATEMENTS = [
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date)",
+    """
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+    """,
 ]
 
 
@@ -110,7 +119,42 @@ def init_db():
             conn.execute("ALTER TABLE items ADD COLUMN ai_summary TEXT")
         except Exception:
             pass  # colonne déjà présente (migration idempotente)
+        _migrate_events_item_id_nullable(conn)
         conn.commit()
+
+
+def _migrate_events_item_id_nullable(conn):
+    """events.item_id était NOT NULL (un événement venait toujours d'un
+    article détecté automatiquement) ; les événements ajoutés à la main
+    n'ont pas d'article source, donc la colonne doit devenir nullable.
+    SQLite ne permet pas de modifier une contrainte en place : on
+    reconstruit la table si nécessaire (idempotent, ne s'exécute qu'une
+    fois par base)."""
+    try:
+        info = conn.execute("PRAGMA table_info(events)")
+        item_id_col = next((r for r in info if r["name"] == "item_id"), None)
+        if item_id_col is None or item_id_col["notnull"] == 0:
+            return
+        conn.execute(
+            """
+            CREATE TABLE events_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER REFERENCES items(id),
+                title TEXT NOT NULL,
+                event_date TEXT NOT NULL,
+                category TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        conn.execute(
+            "INSERT INTO events_new (id, item_id, title, event_date, category, created_at) "
+            "SELECT id, item_id, title, event_date, category, created_at FROM events"
+        )
+        conn.execute("DROP TABLE events")
+        conn.execute("ALTER TABLE events_new RENAME TO events")
+    except Exception:
+        pass
 
 
 def insert_item(conn, source: str, category: str, title: str, url: str, summary: str, published_at: str):
@@ -224,23 +268,54 @@ def assign_favorites_to_folder(conn, item_ids: list[int], folder_id: int):
     conn.commit()
 
 
-def insert_event(conn, item_id: int, title: str, event_date: str, category: str):
-    conn.execute(
-        "INSERT INTO events (item_id, title, event_date, category) VALUES (?, ?, ?, ?)",
+def insert_event(conn, item_id: int | None, title: str, event_date: str, category: str) -> int:
+    """item_id=None pour un événement ajouté à la main (pas d'article source)."""
+    rows = conn.execute(
+        "INSERT INTO events (item_id, title, event_date, category) VALUES (?, ?, ?, ?) RETURNING id",
         (item_id, title, event_date, category),
     )
+    conn.commit()
+    return rows[0]["id"]
+
+
+def delete_event(conn, event_id: int):
+    conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
     conn.commit()
 
 
 def list_upcoming_events(conn, today_iso: str):
-    """Événements futurs (>= aujourd'hui), avec l'URL de l'article source, triés par date."""
+    """Événements futurs (>= aujourd'hui), avec l'URL de l'article source (NULL
+    pour un événement ajouté à la main), triés par date."""
     return conn.execute(
         """
         SELECT events.*, items.url AS item_url
         FROM events
-        JOIN items ON items.id = events.item_id
+        LEFT JOIN items ON items.id = events.item_id
         WHERE events.event_date >= ?
         ORDER BY events.event_date ASC
         """,
         (today_iso,),
     )
+
+
+def list_events_on(conn, day_iso: str):
+    """Événements dont la date tombe exactement sur ce jour (pour la notif quotidienne)."""
+    return conn.execute("SELECT * FROM events WHERE event_date = ?", (day_iso,))
+
+
+def add_push_subscription(conn, endpoint: str, p256dh: str, auth: str):
+    if not conn.execute("SELECT 1 FROM push_subscriptions WHERE endpoint = ?", (endpoint,)):
+        conn.execute(
+            "INSERT INTO push_subscriptions (endpoint, p256dh, auth) VALUES (?, ?, ?)",
+            (endpoint, p256dh, auth),
+        )
+        conn.commit()
+
+
+def remove_push_subscription(conn, endpoint: str):
+    conn.execute("DELETE FROM push_subscriptions WHERE endpoint = ?", (endpoint,))
+    conn.commit()
+
+
+def list_push_subscriptions(conn):
+    return conn.execute("SELECT * FROM push_subscriptions")

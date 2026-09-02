@@ -15,24 +15,41 @@ from app.collector import run_collection
 from app.config import CATEGORIES
 from app.db import (
     add_favorite,
+    add_push_subscription,
     assign_favorites_to_folder,
     count_favorites_by_folder,
     create_folder,
+    delete_event,
     favorited_item_ids,
     get_conn,
     get_folder,
     get_item,
     init_db,
+    insert_event,
     is_favorited,
+    list_events_on,
     list_favorites,
     list_folders,
     list_items,
+    list_push_subscriptions,
     list_upcoming_events,
     remove_favorite,
+    remove_push_subscription,
     save_ai_summary,
     set_favorite_folder,
 )
-from app.formatting import days_until, format_date, group_by_date, group_events_by_date, split_today
+from app.formatting import (
+    day_number,
+    days_until,
+    format_date,
+    group_by_date,
+    group_events_by_date,
+    is_today_str,
+    month_year_label,
+    split_today,
+    weekday_label,
+)
+from app.push import send_push
 from app.relevance import rank_and_cap, rank_and_cap_single
 from app.summarizer import generate_summary
 
@@ -46,6 +63,9 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # cache navigateur du CSS et du service worker sans action manuelle.
 ASSET_VERSION = os.environ.get("VERCEL_GIT_COMMIT_SHA", "dev")[:7]
 templates.env.globals["ASSET_VERSION"] = ASSET_VERSION
+# Clé publique VAPID : sûre à exposer côté client, nécessaire pour
+# PushManager.subscribe(). La clé privée reste uniquement dans app/push.py.
+templates.env.globals["VAPID_PUBLIC_KEY"] = os.environ.get("VAPID_PUBLIC_KEY", "")
 
 
 @app.get("/sw.js")
@@ -67,6 +87,10 @@ def favicon_url(article_url: str) -> str:
 templates.env.filters["favicon"] = favicon_url
 templates.env.filters["date"] = format_date
 templates.env.filters["days_until"] = days_until
+templates.env.filters["weekday"] = weekday_label
+templates.env.filters["day_number"] = day_number
+templates.env.filters["month_year"] = month_year_label
+templates.env.filters["is_today"] = is_today_str
 
 init_db()
 
@@ -139,8 +163,28 @@ def calendar_page(request: Request):
     groups = group_events_by_date(events)
     return templates.TemplateResponse(
         "calendar.html",
-        {"request": request, "groups": groups},
+        {"request": request, "groups": groups, "categories": CATEGORIES},
     )
+
+
+@app.post("/calendar/events")
+def create_event(
+    title: str = Form(...),
+    event_date: str = Form(...),
+    category: str = Form(...),
+):
+    title = title.strip()
+    if title and category in CATEGORIES:
+        with get_conn() as conn:
+            insert_event(conn, None, title, event_date, category)
+    return RedirectResponse(url="/calendar", status_code=303)
+
+
+@app.post("/calendar/events/{event_id}/delete")
+def delete_event_route(event_id: int):
+    with get_conn() as conn:
+        delete_event(conn, event_id)
+    return RedirectResponse(url="/calendar", status_code=303)
 
 
 @app.post("/refresh")
@@ -289,4 +333,60 @@ def cron_refresh(authorization: Optional[str] = Header(default=None)):
     if secret and authorization != f"Bearer {secret}":
         raise HTTPException(status_code=401, detail="Unauthorized")
     new_count = run_collection()
-    return {"new_items": new_count}
+    notified = _send_daily_event_digest()
+    return {"new_items": new_count, "notified": notified}
+
+
+def _send_daily_event_digest() -> int:
+    """Envoie une notification push résumant les événements du jour à tous
+    les appareils abonnés. Retourne le nombre de notifications envoyées
+    avec succès. Best-effort : un abonnement expiré est nettoyé, une autre
+    erreur d'envoi n'empêche pas les suivants."""
+    today_iso = datetime.utcnow().date().isoformat()
+    with get_conn() as conn:
+        todays_events = list_events_on(conn, today_iso)
+        if not todays_events:
+            return 0
+        subscriptions = list_push_subscriptions(conn)
+        if not subscriptions:
+            return 0
+        if len(todays_events) == 1:
+            body = todays_events[0]["title"]
+        else:
+            titles = ", ".join(ev["title"] for ev in todays_events[:3])
+            body = f"{len(todays_events)} événements aujourd'hui : {titles}"
+        sent = 0
+        for sub in subscriptions:
+            result = send_push(sub, "Événements du jour", body, "/calendar")
+            if result == "ok":
+                sent += 1
+            elif result == "expired":
+                remove_push_subscription(conn, sub["endpoint"])
+        return sent
+
+
+@app.get("/push/vapid-public-key")
+def vapid_public_key():
+    return {"key": templates.env.globals["VAPID_PUBLIC_KEY"]}
+
+
+@app.post("/push/subscribe")
+async def push_subscribe(request: Request):
+    data = await request.json()
+    endpoint = data.get("endpoint")
+    keys = data.get("keys") or {}
+    if not endpoint or not keys.get("p256dh") or not keys.get("auth"):
+        raise HTTPException(status_code=400, detail="Abonnement invalide")
+    with get_conn() as conn:
+        add_push_subscription(conn, endpoint, keys["p256dh"], keys["auth"])
+    return {"ok": True}
+
+
+@app.post("/push/unsubscribe")
+async def push_unsubscribe(request: Request):
+    data = await request.json()
+    endpoint = data.get("endpoint")
+    if endpoint:
+        with get_conn() as conn:
+            remove_push_subscription(conn, endpoint)
+    return {"ok": True}
