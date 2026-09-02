@@ -79,6 +79,9 @@ class _SqliteConn:
     def execute(self, sql, params=()):
         return self._conn.execute(sql, params).fetchall()
 
+    def batch(self, statements):
+        return [self.execute(statement) for statement in statements]
+
     def commit(self):
         self._conn.commit()
 
@@ -86,20 +89,54 @@ class _SqliteConn:
         self._conn.close()
 
 
-class _TursoConn:
-    def __init__(self):
+# Client Turso partagé, créé une seule fois par instance de fonction serverless
+# (au lieu d'une nouvelle connexion à chaque appel à get_conn()). Sur Vercel,
+# une instance "chaude" traite les requêtes une par une : réutiliser ce
+# client entre elles évite de repayer une poignée de main avec Turso à
+# chaque page vue. TURSO_DATABASE_URL utilise le schéma libsql:// (donc un
+# WebSocket persistant, pas du HTTP) : si la connexion reste inactive trop
+# longtemps entre deux visites, elle peut être coupée côté réseau avant que
+# l'instance serverless ne soit recyclée — d'où le retry ci-dessous, qui
+# recrée le client une fois si un appel échoue.
+_turso_client = None
+
+
+def _get_turso_client(force_new=False):
+    global _turso_client
+    if _turso_client is None or force_new:
         import libsql_client
 
-        self._client = libsql_client.create_client_sync(url=TURSO_URL, auth_token=TURSO_TOKEN)
+        _turso_client = libsql_client.create_client_sync(url=TURSO_URL, auth_token=TURSO_TOKEN)
+    return _turso_client
+
+
+class _TursoConn:
+    def __init__(self):
+        self._client = _get_turso_client()
+
+    def _with_retry(self, fn):
+        try:
+            return fn(self._client)
+        except Exception:
+            # Connexion périmée (WebSocket coupé par le réseau pendant une
+            # instance chaude restée inactive) : on recrée le client une
+            # fois et on retente, plutôt que de faire échouer la requête.
+            self._client = _get_turso_client(force_new=True)
+            return fn(self._client)
 
     def execute(self, sql, params=()):
-        return self._client.execute(sql, list(params)).rows
+        return self._with_retry(lambda c: c.execute(sql, list(params)).rows)
+
+    def batch(self, statements):
+        """Exécute plusieurs requêtes sans paramètres en un seul aller-retour
+        réseau vers Turso (utilisé pour la création du schéma au démarrage)."""
+        return self._with_retry(lambda c: [result.rows for result in c.batch(statements)])
 
     def commit(self):
         pass  # chaque execute() est déjà validé côté serveur Turso
 
     def close(self):
-        self._client.close()
+        pass  # le client est partagé et réutilisé par les requêtes suivantes
 
 
 @contextmanager
@@ -111,16 +148,26 @@ def get_conn():
         conn.close()
 
 
+_schema_ready = False  # évite de refaire les vérifications de schéma à chaque
+# appel : init_db() est invoqué au chargement du module ET à chaque
+# run_collection() (le job local appelle run_collection() directement, sans
+# passer par le module principal, d'où le besoin d'un init_db() défensif
+# là-bas). Sans ce garde-fou, chaque clic sur "Actualiser" repayait tous les
+# CREATE TABLE/INDEX et vérifications de migration en aller-retours réseau
+# vers Turso avant même de commencer la collecte.
 def init_db():
+    global _schema_ready
+    if _schema_ready:
+        return
     with get_conn() as conn:
-        for statement in SCHEMA_STATEMENTS:
-            conn.execute(statement)
+        conn.batch(SCHEMA_STATEMENTS)
         try:
             conn.execute("ALTER TABLE items ADD COLUMN ai_summary TEXT")
         except Exception:
             pass  # colonne déjà présente (migration idempotente)
         _migrate_events_item_id_nullable(conn)
         conn.commit()
+    _schema_ready = True
 
 
 def _migrate_events_item_id_nullable(conn):

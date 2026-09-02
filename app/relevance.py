@@ -67,9 +67,16 @@ def score_item(item) -> float:
 def rank_and_cap_single(items, max_items: int = 10):
     """Trie une liste d'articles par pertinence, écarte ceux en-dessous de
     MIN_SCORE (même si ça laisse peu d'articles), et retourne
-    (articles_conservés, total_avant_filtrage)."""
-    ranked = sorted(items, key=score_item, reverse=True)
-    relevant = [it for it in ranked if score_item(it) > MIN_SCORE]
+    (articles_conservés, total_avant_filtrage).
+
+    Chaque score n'est calculé qu'une fois par article (au lieu d'une fois
+    pour le tri puis une seconde fois pour le filtrage)."""
+    scored = sorted(
+        ((score_item(it), it) for it in items),
+        key=lambda pair: pair[0],
+        reverse=True,
+    )
+    relevant = [it for score, it in scored if score > MIN_SCORE]
     return relevant[:max_items], len(items)
 
 

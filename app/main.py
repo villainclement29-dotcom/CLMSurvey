@@ -55,8 +55,23 @@ from app.summarizer import generate_summary
 
 BASE_DIR = Path(__file__).resolve().parent
 
+
+class _CachedStaticFiles(StaticFiles):
+    """StaticFiles standard, sans en-tête Cache-Control : le navigateur ne
+    fait que de la mise en cache heuristique et revalide souvent, ce qui
+    repasse par la fonction serverless pour du CSS/des icônes qui changent
+    rarement. On ajoute un Cache-Control raisonnable (le CSS est de toute
+    façon invalidé via ?v={ASSET_VERSION} à chaque déploiement, donc un
+    cache plus long ne peut pas servir de version périmée)."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers.setdefault("cache-control", "public, max-age=3600")
+        return response
+
+
 app = FastAPI(title="Veille scientifique")
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.mount("/static", _CachedStaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Change à chaque déploiement Vercel (hash de commit) : sert à invalider le
