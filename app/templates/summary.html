@@ -11,12 +11,12 @@
   <header>
     <div class="header-left">
       {% include "_sidebar_toggle.html" %}
-      <a class="back-link" href="/">← Retour à la liste</a>
     </div>
   </header>
 
   {% import "_icons.html" as icons %}
   <article class="summary-card" data-category="{{ item.category }}">
+    <button type="button" class="back-link" id="back-btn">← Retour</button>
     <p class="article-kicker">{{ icons.cat_icon(item.category) }} {{ item.category }}</p>
     <h1>{{ item.title }}</h1>
 
@@ -67,5 +67,17 @@
   </article>
   {% include "_folder_picker_modal.html" %}
   {% include "_sidebar_panel.html" %}
+  <script>
+    document.getElementById("back-btn").addEventListener("click", function () {
+      // Revient à la page précédente (liste, archives, favoris...) telle
+      // qu'elle était (filtre, recherche, scroll) ; repli sur l'accueil si
+      // l'article a été ouvert directement, sans historique de navigation.
+      if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
+        history.back();
+      } else {
+        window.location.href = "/";
+      }
+    });
+  </script>
 </body>
 </html>
