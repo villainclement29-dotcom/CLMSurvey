@@ -7,7 +7,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, Form, Header, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -42,12 +42,21 @@ app = FastAPI(title="Veille scientifique")
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+# Change à chaque déploiement Vercel (hash de commit) : sert à invalider le
+# cache navigateur du CSS et du service worker sans action manuelle.
+ASSET_VERSION = os.environ.get("VERCEL_GIT_COMMIT_SHA", "dev")[:7]
+templates.env.globals["ASSET_VERSION"] = ASSET_VERSION
+
 
 @app.get("/sw.js")
 def service_worker():
     """Servi à la racine (pas sous /static) pour que le scope du service
-    worker couvre tout le site, pas seulement /static/."""
-    return FileResponse(str(BASE_DIR / "static" / "sw.js"), media_type="application/javascript")
+    worker couvre tout le site, pas seulement /static/. Le CACHE_NAME est
+    tagué avec ASSET_VERSION pour forcer un rafraîchissement du cache du
+    service worker à chaque déploiement."""
+    content = (BASE_DIR / "static" / "sw.js").read_text()
+    content = content.replace("veille-static-v1", f"veille-static-{ASSET_VERSION}")
+    return Response(content=content, media_type="application/javascript")
 
 
 def favicon_url(article_url: str) -> str:

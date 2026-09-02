@@ -1,6 +1,5 @@
 const CACHE_NAME = "veille-static-v1";
 const STATIC_ASSETS = [
-  "/static/style.css",
   "/static/manifest.json",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png",
