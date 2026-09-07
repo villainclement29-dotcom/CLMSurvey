@@ -40,6 +40,7 @@ from app.db import (
     remove_push_subscription,
     save_ai_summary,
     set_favorite_folder,
+    update_event_title,
 )
 from app.formatting import (
     day_number,
@@ -242,11 +243,27 @@ def create_event(
     return RedirectResponse(url="/calendar", status_code=303)
 
 
+def _safe_calendar_next(next: str) -> str:
+    # Repli défensif : next vient d'un champ caché rempli par le JS de la
+    # page elle-même, mais reste une donnée de formulaire modifiable côté
+    # client — on refuse de rediriger ailleurs que dans /calendar.
+    return next if next.startswith("/calendar") else "/calendar"
+
+
 @app.post("/calendar/events/{event_id}/delete")
-def delete_event_route(event_id: int):
+def delete_event_route(event_id: int, next: str = Form("/calendar")):
     with get_conn() as conn:
         delete_event(conn, event_id)
-    return RedirectResponse(url="/calendar", status_code=303)
+    return RedirectResponse(url=_safe_calendar_next(next), status_code=303)
+
+
+@app.post("/calendar/events/{event_id}/edit")
+def edit_event_route(event_id: int, title: str = Form(...), next: str = Form("/calendar")):
+    title = title.strip()
+    if title:
+        with get_conn() as conn:
+            update_event_title(conn, event_id, title)
+    return RedirectResponse(url=_safe_calendar_next(next), status_code=303)
 
 
 @app.post("/refresh")

@@ -340,6 +340,11 @@ def delete_event(conn, event_id: int):
     conn.commit()
 
 
+def update_event_title(conn, event_id: int, title: str):
+    conn.execute("UPDATE events SET title = ? WHERE id = ?", (title, event_id))
+    conn.commit()
+
+
 def list_upcoming_events(conn, today_iso: str):
     """Événements futurs (>= aujourd'hui), avec l'URL de l'article source (NULL
     pour un événement ajouté à la main), triés par date."""

@@ -697,60 +697,39 @@ body.calendar-page #month-view {
   min-width: 0;
 }
 
-.calendar-event-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-}
+.calendar-event-row { min-width: 0; }
 
 .calendar-event {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: var(--surface);
+  display: block;
+  background: var(--cat-color, var(--accent));
   border-radius: 9px;
   padding: 0.6rem 0.8rem;
   text-decoration: none;
-  color: inherit;
+  color: white;
   min-width: 0;
-  transition: background 0.12s ease;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: filter 0.12s ease;
+  /* Le long appui (édition/suppression) ne doit pas déclencher la
+     sélection de texte ni le menu contextuel natif du navigateur. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-a.calendar-event:hover { background: var(--surface-hover); }
-
-.calendar-event-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--cat-color, var(--accent));
-  flex-shrink: 0;
-}
+.calendar-event:hover { filter: brightness(1.08); }
 
 .calendar-event-title {
-  flex: 1;
+  display: block;
   min-width: 0;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
-.calendar-event-delete {
-  background: none;
-  color: var(--muted);
-  border: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 1rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.calendar-event-delete:hover { background: var(--surface-hover); color: var(--text); }
 
 .event-form {
   display: flex;
@@ -769,6 +748,17 @@ a.calendar-event:hover { background: var(--surface-hover); }
   font-size: 0.9rem;
   font-family: inherit;
 }
+
+.event-delete-form { margin-top: 0.75rem; }
+
+.event-delete-btn {
+  width: 100%;
+  background: none;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.event-delete-btn:hover { background: rgba(239, 68, 68, 0.1); }
 
 /* Menu latéral (burger) */
 

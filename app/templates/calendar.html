@@ -86,6 +86,22 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="event-edit-backdrop" hidden>
+    <div class="modal">
+      <button type="button" class="modal-close" id="event-edit-close-btn" aria-label="Fermer">&times;</button>
+      <h2>Modifier l'événement</h2>
+      <form method="post" id="event-edit-form" class="event-form">
+        <input type="hidden" name="next" id="event-edit-next" value="">
+        <input type="text" name="title" id="event-edit-title-input" maxlength="200" required>
+        <button type="submit">Enregistrer</button>
+      </form>
+      <form method="post" id="event-delete-form" class="event-delete-form">
+        <input type="hidden" name="next" id="event-delete-next" value="">
+        <button type="submit" class="event-delete-btn">Supprimer l'événement</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     (function () {
       var openBtn = document.getElementById("open-event-modal-btn");
@@ -337,6 +353,108 @@
           toggleBtn.innerHTML = {{ icons.list_view()|tojson }};
           toggleBtn.title = "Vue journalière";
           toggleBtn.setAttribute("aria-pressed", "true");
+        }
+      });
+    })();
+
+    (function () {
+      // Modifier/supprimer un évènement par appui long (mobile/PWA) ou
+      // clic maintenu (souris) sur sa carte, plutôt qu'une croix toujours
+      // visible. Délégué sur document pour couvrir les cartes présentes
+      // dès le chargement comme celles qui pourraient être ajoutées plus
+      // tard (favoris/scroll infini ailleurs dans l'app suivent le même
+      // principe).
+      var LONG_PRESS_MS = 500;
+      var MOVE_THRESHOLD = 10;
+
+      var backdrop = document.getElementById("event-edit-backdrop");
+      var closeBtn = document.getElementById("event-edit-close-btn");
+      var editForm = document.getElementById("event-edit-form");
+      var editNext = document.getElementById("event-edit-next");
+      var titleInput = document.getElementById("event-edit-title-input");
+      var deleteForm = document.getElementById("event-delete-form");
+      var deleteNext = document.getElementById("event-delete-next");
+
+      function closeEditModal() { backdrop.hidden = true; }
+      closeBtn.addEventListener("click", closeEditModal);
+      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeEditModal(); });
+
+      function openEditModal(el) {
+        var panel = el.closest(".day-panel");
+        var next = "/calendar?date=" + (panel ? panel.dataset.date : "{{ today_iso }}");
+        editForm.action = "/calendar/events/" + el.dataset.eventId + "/edit";
+        deleteForm.action = "/calendar/events/" + el.dataset.eventId + "/delete";
+        editNext.value = next;
+        deleteNext.value = next;
+        titleInput.value = el.dataset.eventTitle;
+        backdrop.hidden = false;
+        titleInput.focus();
+      }
+
+      var pressTimer = null;
+      var pressTarget = null;
+      var longPressFired = false;
+      var startX = 0, startY = 0;
+
+      function cancelPress() {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        pressTarget = null;
+      }
+
+      function startPress(el, x, y) {
+        pressTarget = el;
+        startX = x; startY = y;
+        longPressFired = false;
+        pressTimer = setTimeout(function () {
+          longPressFired = true;
+          if (navigator.vibrate) navigator.vibrate(15);
+          openEditModal(el);
+        }, LONG_PRESS_MS);
+      }
+
+      document.addEventListener("touchstart", function (e) {
+        var el = e.target.closest(".calendar-event");
+        if (!el) return;
+        var t = e.touches[0];
+        startPress(el, t.clientX, t.clientY);
+      }, { passive: true });
+
+      document.addEventListener("touchmove", function (e) {
+        if (!pressTarget) return;
+        var t = e.touches[0];
+        if (Math.abs(t.clientX - startX) > MOVE_THRESHOLD || Math.abs(t.clientY - startY) > MOVE_THRESHOLD) {
+          cancelPress();
+        }
+      }, { passive: true });
+
+      document.addEventListener("touchend", function (e) {
+        if (!pressTarget) { return; }
+        cancelPress();
+        if (longPressFired) {
+          // Empêche le clic/la navigation synthétisés par le tactile une
+          // fois la carte d'évènement ouverte en modification.
+          e.preventDefault();
+        }
+      });
+
+      document.addEventListener("mousedown", function (e) {
+        var el = e.target.closest(".calendar-event");
+        if (!el) return;
+        startPress(el, e.clientX, e.clientY);
+      });
+      document.addEventListener("mouseup", cancelPress);
+      document.addEventListener("mouseleave", cancelPress, true);
+
+      document.addEventListener("contextmenu", function (e) {
+        if (e.target.closest(".calendar-event")) e.preventDefault();
+      });
+
+      document.addEventListener("click", function (e) {
+        var el = e.target.closest(".calendar-event");
+        if (el && longPressFired) {
+          e.preventDefault();
+          longPressFired = false;
         }
       });
     })();
