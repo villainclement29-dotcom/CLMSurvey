@@ -6,11 +6,22 @@ import feedparser
 
 from app.config import RSS_FEEDS, RSS_MAX_ITEMS_PER_FEED
 
+# Certains sites (ex: presse tech hébergée sur des CDN anti-bot) bloquent le
+# user-agent par défaut de feedparser, qui s'identifie explicitement comme
+# tel ("Python-feedparser/x.x.x") ; un user-agent de navigateur classique
+# passe leurs filtres sans rien changer d'autre au comportement du flux.
+_USER_AGENT = "Mozilla/5.0 (compatible; CLMSurveyBot/1.0)"
+
 
 def fetch_rss_items() -> list[dict]:
     items = []
     for feed_conf in RSS_FEEDS:
-        parsed = feedparser.parse(feed_conf["url"])
+        parsed = feedparser.parse(feed_conf["url"], agent=_USER_AGENT)
+        if not parsed.entries:
+            print(
+                f"[rss] 0 entrée pour {feed_conf['name']} ({feed_conf['url']}): "
+                f"status={parsed.get('status')} bozo_exception={parsed.get('bozo_exception')}"
+            )
         for entry in parsed.entries[:RSS_MAX_ITEMS_PER_FEED]:
             published_at = _extract_date(entry)
             items.append(
