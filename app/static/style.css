@@ -116,7 +116,7 @@ button {
   display: flex;
 }
 
-.fav-btn {
+.fav-btn, .share-btn {
   background: none;
   color: var(--muted);
   border: none;
@@ -130,11 +130,13 @@ button {
   justify-content: center;
 }
 
-.fav-btn .icon-svg { width: 1.15em; height: 1.15em; }
+.fav-btn .icon-svg, .share-btn .icon-svg { width: 1.15em; height: 1.15em; }
 
 .fav-btn.active { color: #f43f5e; }
 
 .fav-btn:hover { color: #f43f5e; }
+
+.share-btn:hover { color: var(--accent); }
 
 .item {
   display: block;
@@ -275,13 +277,9 @@ button {
   color: var(--muted);
 }
 
-.summary-actions .fav-form { position: static; margin-left: auto; }
+.summary-actions .fav-form { position: static; }
 
-.summary-actions .fav-btn {
-  width: 30px;
-  height: 30px;
-  margin-left: auto;
-}
+.summary-actions .share-btn { margin-left: auto; }
 
 .article-divider {
   border: none;
@@ -857,3 +855,27 @@ a.calendar-event:hover { background: var(--surface-hover); }
 /* L'animation d'intro (système solaire) a son propre <style> inline dans
    _intro_splash.html : elle doit pouvoir s'afficher avant même que ce
    fichier soit chargé, pour servir d'écran de chargement. */
+
+/* Toast de confirmation (bouton partager, repli copie du lien) */
+
+.share-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 1000;
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.share-toast.visible { opacity: 1; }

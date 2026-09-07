@@ -25,6 +25,8 @@
     {% else %}
     <button type="button" class="fav-btn quick-fav-btn" data-item-id="{{ item.id }}" data-next="{{ next_url }}" title="Ajouter aux favoris">{{ icons.heart() }}</button>
     {% endif %}
+    <button type="button" class="share-btn" data-share-url="/article/{{ item.id }}" data-share-title="{{ item.title }}"
+            title="Partager cet article">{{ icons.share() }}</button>
   </div>
   <a class="item" data-category="{{ item.category }}" href="/article/{{ item.id }}">
     <span class="badge">{{ icons.cat_icon(item.category) }} {{ item.category }}</span>

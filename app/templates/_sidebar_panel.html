@@ -12,6 +12,8 @@
   </nav>
 </div>
 
+<div id="share-toast" class="share-toast" hidden></div>
+
 <script>
   (function () {
     var toggleBtn = document.getElementById("menu-toggle-btn");
@@ -22,5 +24,40 @@
     toggleBtn.addEventListener("click", openMenu);
     closeBtn.addEventListener("click", closeMenu);
     backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeMenu(); });
+  })();
+
+  (function () {
+    // Délégation sur document (pas de binding direct sur les boutons) :
+    // fonctionne aussi pour les cartes chargées après coup, par ex. via
+    // le scroll infini des archives.
+    var toast = document.getElementById("share-toast");
+    var toastTimer = null;
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.hidden = false;
+      requestAnimationFrame(function () { toast.classList.add("visible"); });
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        toast.classList.remove("visible");
+        setTimeout(function () { toast.hidden = true; }, 250);
+      }, 2000);
+    }
+
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest(".share-btn");
+      if (!btn) return;
+      var url = window.location.origin + btn.dataset.shareUrl;
+      var title = btn.dataset.shareTitle || document.title;
+      if (navigator.share) {
+        navigator.share({ title: title, url: url }).catch(function () {});
+        return;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+          .then(function () { showToast("Lien copié dans le presse-papiers"); })
+          .catch(function () { showToast(url); });
+      }
+    });
   })();
 </script>

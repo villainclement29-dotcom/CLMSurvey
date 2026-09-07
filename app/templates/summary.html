@@ -23,6 +23,8 @@
     <div class="summary-actions">
       <a class="source-link" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.source }} {{ icons.external_link() }}</a>
       <span class="published-date">{{ item.published_at | date }}</span>
+      <button type="button" class="share-btn" data-share-url="/article/{{ item.id }}" data-share-title="{{ item.title }}"
+              title="Partager cet article">{{ icons.share() }}</button>
       {% if favorited %}
       <form method="post" action="/favorites/{{ item.id }}/toggle" class="fav-form">
         <input type="hidden" name="next" value="/article/{{ item.id }}">
