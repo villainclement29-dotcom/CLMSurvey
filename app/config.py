@@ -23,13 +23,18 @@ ARXIV_CATEGORIES = {
     "quant-ph": "Physique",
 }
 
-# Flux RSS de labs/agences officielles.
+# Flux RSS de labs/agences officielles, complétés par de la presse tech
+# généraliste pour la catégorie IA : les blogs officiels (OpenAI, DeepMind)
+# ne couvrent pas toujours les annonces de façon détaillée/rapide, et les
+# gros lancements de modèles se retrouvaient noyés sous les papiers arXiv.
 # Anthropic et Meta AI ne publient pas de flux RSS public (testé : 404 sur les
 # chemins habituels) — retirés pour l'instant, à remplacer par du scraping
 # dédié si besoin plus tard.
 RSS_FEEDS = [
     {"name": "OpenAI", "url": "https://openai.com/news/rss.xml", "category": "IA"},
     {"name": "Google DeepMind", "url": "https://deepmind.google/blog/rss.xml", "category": "IA"},
+    {"name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/", "category": "IA"},
+    {"name": "The Verge AI", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "category": "IA"},
     {"name": "NASA", "url": "https://www.nasa.gov/news-release/feed/", "category": "Espace"},
     {"name": "ESA", "url": "https://www.esa.int/rssfeed/Our_Activities/Space_News", "category": "Espace"},
     {"name": "NASA Science", "url": "https://science.nasa.gov/feed/", "category": "Astronomie"},

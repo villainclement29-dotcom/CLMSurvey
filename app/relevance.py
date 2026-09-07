@@ -23,6 +23,13 @@ AI_RESEARCH_KEYWORDS = [
     "robotics", "autonomous", "model architecture", "training",
     "benchmark", "dataset", "generative", "computer vision", "nlp",
     "agent", "diffusion", "fine-tun", "inference",
+    # Annonces/lancements de modèles : les gros événements (nouveau modèle
+    # phare, nouvelle version) sont souvent couverts en langage produit
+    # plutôt que technique, et passaient au travers des mots-clés
+    # ci-dessus, noyés sous les papiers arXiv qui eux cochent plusieurs
+    # termes de recherche automatiquement.
+    "model", "release", "launch", "unveil", "flagship", "update",
+    "gpt", "chatgpt", "gemini", "claude",
 ]
 
 # Contenu qui passe le filtre de catégorie mais n'a pas de valeur pour un

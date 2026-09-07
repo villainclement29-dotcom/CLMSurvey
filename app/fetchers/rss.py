@@ -17,7 +17,7 @@ def fetch_rss_items() -> list[dict]:
                 {
                     "source": feed_conf["name"],
                     "category": feed_conf["category"],
-                    "title": entry.get("title", "(sans titre)"),
+                    "title": _clean_title(entry.get("title", "(sans titre)")),
                     "url": entry.get("link"),
                     "summary": _clean_summary(entry.get("summary", "")),
                     "published_at": published_at,
@@ -32,6 +32,15 @@ def _extract_date(entry) -> str:
         if value:
             return datetime(*value[:6], tzinfo=timezone.utc).isoformat()
     return datetime.now(timezone.utc).isoformat()
+
+
+def _clean_title(raw: str) -> str:
+    # Certains flux (ex: The Verge) renvoient des titres avec des entités
+    # HTML échappées deux fois (ex: "&#8216;" au lieu de l'apostrophe
+    # courbe) : feedparser ne les décode pas, il faut le faire nous-mêmes.
+    import html
+
+    return html.unescape(raw)
 
 
 def _clean_summary(raw: str) -> str:
