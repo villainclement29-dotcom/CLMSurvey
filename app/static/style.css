@@ -726,9 +726,8 @@ body.calendar-page #month-view {
   min-width: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .event-form {
