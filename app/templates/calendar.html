@@ -32,26 +32,40 @@
       >{{ day_iso | day_number }}</button>
       {% endfor %}
     </div>
-    <button type="button" class="date-strip-grid-btn" title="Vue mensuelle (bientôt disponible)" aria-disabled="true">{{ icons.grid() }}</button>
+    <button type="button" class="date-strip-grid-btn" id="view-toggle-btn" title="Vue mensuelle" aria-pressed="false">{{ icons.grid() }}</button>
   </div>
 
-  <p class="day-title" id="day-title">{{ center_date | full_date }}</p>
+  <div id="day-view">
+    <p class="day-title" id="day-title">{{ center_date | full_date }}</p>
 
-  <div class="day-slider" id="day-slider">
-    {% for day_iso in window_dates %}
-    <div class="day-panel" data-date="{{ day_iso }}" data-full-date="{{ day_iso | full_date }}">
-      {% set day_events = events_by_date.get(day_iso, []) %}
-      {% if day_events %}
-      <ul class="calendar-events">
-        {% for ev in day_events %}
-        <li class="calendar-event-row">{% include "_calendar_event_row.html" %}</li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="day-panel-empty">Aucun évènement ce jour.</p>
-      {% endif %}
+    <div class="day-slider" id="day-slider">
+      {% for day_iso in window_dates %}
+      <div class="day-panel" data-date="{{ day_iso }}" data-full-date="{{ day_iso | full_date }}">
+        {% set day_events = events_by_date.get(day_iso, []) %}
+        {% if day_events %}
+        <ul class="calendar-events">
+          {% for ev in day_events %}
+          <li class="calendar-event-row">{% include "_calendar_event_row.html" %}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="day-panel-empty">Aucun évènement ce jour.</p>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+  </div>
+
+  <div id="month-view" hidden>
+    <div class="month-toolbar">
+      <button type="button" class="icon-only-btn" id="month-prev-btn" aria-label="Mois précédent">‹</button>
+      <span class="month-toolbar-title" id="month-toolbar-title"></span>
+      <button type="button" class="icon-only-btn" id="month-next-btn" aria-label="Mois suivant">›</button>
+    </div>
+    <div class="month-grid-weekdays">
+      <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+    </div>
+    <div class="month-grid" id="month-grid"></div>
   </div>
 
   <div class="modal-backdrop" id="event-modal-backdrop" hidden>
@@ -217,6 +231,112 @@
           window.location.href = "/calendar?date=" + btn.dataset.date;
         } else {
           scrollToIndex(idx, true);
+        }
+      });
+    })();
+
+    (function () {
+      // Vue mensuelle (grille façon Calendrier Apple), construite en JS à
+      // partir des dates ayant un évènement (event_dates, transmises par le
+      // serveur) : évite un aller-retour serveur à chaque changement de
+      // mois. Cliquer sur un jour navigue vers la vue "jour" à cette date.
+      var eventDates = new Set({{ event_dates_json | safe }});
+      var todayIso = "{{ today_iso }}";
+      var centerIso = "{{ center_date }}";
+      var monthNames = [
+        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+      ];
+
+      var toggleBtn = document.getElementById("view-toggle-btn");
+      var dayView = document.getElementById("day-view");
+      var monthView = document.getElementById("month-view");
+      var monthGrid = document.getElementById("month-grid");
+      var monthTitle = document.getElementById("month-toolbar-title");
+
+      function pad(n) { return n < 10 ? "0" + n : "" + n; }
+      function isoOf(y, m, d) { return y + "-" + pad(m + 1) + "-" + pad(d); }
+
+      var viewYear, viewMonth; // mois actuellement affiché en vue mensuelle (0-11)
+
+      function renderMonth() {
+        monthTitle.textContent = monthNames[viewMonth] + " " + viewYear;
+        monthGrid.innerHTML = "";
+        var firstDay = new Date(viewYear, viewMonth, 1);
+        // getDay() : 0=dimanche..6=samedi -> on veut 0=lundi..6=dimanche
+        var offset = (firstDay.getDay() + 6) % 7;
+        var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+        for (var i = 0; i < offset; i++) {
+          var blank = document.createElement("div");
+          blank.className = "month-grid-cell month-grid-cell-blank";
+          monthGrid.appendChild(blank);
+        }
+
+        for (var d = 1; d <= daysInMonth; d++) {
+          var iso = isoOf(viewYear, viewMonth, d);
+          var weekday = (offset + d - 1) % 7; // 0=lundi..6=dimanche
+          var cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "month-grid-cell";
+          if (weekday >= 5) cell.classList.add("is-weekend");
+          if (iso === todayIso) cell.classList.add("is-today");
+          if (iso < todayIso) cell.classList.add("is-past");
+
+          var num = document.createElement("span");
+          num.className = "month-grid-daynum";
+          num.textContent = d;
+          cell.appendChild(num);
+
+          if (eventDates.has(iso)) {
+            var dot = document.createElement("span");
+            dot.className = "month-grid-dot";
+            cell.appendChild(dot);
+          }
+
+          if (iso >= todayIso) {
+            cell.addEventListener("click", function () {
+              window.location.href = "/calendar?date=" + this.dataset.date;
+            });
+          }
+          cell.dataset.date = iso;
+          monthGrid.appendChild(cell);
+        }
+      }
+
+      document.getElementById("month-prev-btn").addEventListener("click", function () {
+        viewMonth -= 1;
+        if (viewMonth < 0) { viewMonth = 11; viewYear -= 1; }
+        renderMonth();
+      });
+
+      document.getElementById("month-next-btn").addEventListener("click", function () {
+        viewMonth += 1;
+        if (viewMonth > 11) { viewMonth = 0; viewYear += 1; }
+        renderMonth();
+      });
+
+      toggleBtn.addEventListener("click", function () {
+        var showingMonth = !monthView.hidden;
+        if (showingMonth) {
+          dayView.hidden = false;
+          monthView.hidden = true;
+          toggleBtn.innerHTML = {{ icons.grid()|tojson }};
+          toggleBtn.title = "Vue mensuelle";
+          toggleBtn.setAttribute("aria-pressed", "false");
+        } else {
+          var current = centerIso;
+          var activeStripDay = document.querySelector(".date-strip-day.is-active");
+          if (activeStripDay) current = activeStripDay.dataset.date;
+          var parts = current.split("-").map(Number);
+          viewYear = parts[0];
+          viewMonth = parts[1] - 1;
+          renderMonth();
+          dayView.hidden = true;
+          monthView.hidden = false;
+          toggleBtn.innerHTML = {{ icons.list_view()|tojson }};
+          toggleBtn.title = "Vue journalière";
+          toggleBtn.setAttribute("aria-pressed", "true");
         }
       });
     })();

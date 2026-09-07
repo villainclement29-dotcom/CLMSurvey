@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from datetime import date as _date
 from datetime import datetime, timedelta
@@ -11,6 +12,7 @@ from fastapi import FastAPI, Form, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup
 
 from app.collector import run_collection
 from app.config import CATEGORIES
@@ -110,6 +112,7 @@ templates.env.filters["month_year"] = month_year_label
 templates.env.filters["is_today"] = is_today_str
 templates.env.filters["full_date"] = full_date_label
 templates.env.filters["month_abbr"] = month_abbr_label
+templates.env.filters["tojson"] = lambda value: Markup(json.dumps(value))
 
 init_db()
 
@@ -202,6 +205,11 @@ def calendar_page(request: Request, date: Optional[str] = None):
         if window_start_iso <= ev["event_date"] <= window_end_iso:
             events_by_date.setdefault(ev["event_date"], []).append(ev)
 
+    # Toutes les dates ayant au moins un évènement (pas seulement celles de
+    # la fenêtre du slider) : sert à afficher les points dans la vue
+    # mensuelle, qui peut être feuilletée bien au-delà de cette fenêtre.
+    event_dates = sorted({ev["event_date"] for ev in events})
+
     window_dates = [
         (window_start + timedelta(days=i)).isoformat()
         for i in range((window_end - window_start).days + 1)
@@ -213,6 +221,7 @@ def calendar_page(request: Request, date: Optional[str] = None):
             "request": request,
             "window_dates": window_dates,
             "events_by_date": events_by_date,
+            "event_dates_json": json.dumps(event_dates),
             "center_date": center.isoformat(),
             "today_iso": today.isoformat(),
             "categories": CATEGORIES,

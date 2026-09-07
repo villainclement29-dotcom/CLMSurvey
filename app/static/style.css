@@ -488,10 +488,19 @@ body.calendar-page {
 }
 
 body.calendar-page header,
-body.calendar-page .date-strip-header,
-body.calendar-page .day-title {
+body.calendar-page .date-strip-header {
   flex: 0 0 auto;
 }
+
+body.calendar-page #day-view,
+body.calendar-page #month-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-title { flex: 0 0 auto; }
 
 .date-strip-header {
   display: flex;
@@ -550,9 +559,11 @@ body.calendar-page .day-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.55;
-  cursor: default;
 }
+
+.date-strip-grid-btn:hover { background: var(--surface-hover); color: var(--text); }
+
+.date-strip-grid-btn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 
 .date-strip-grid-btn .icon-svg { width: 1em; height: 1em; }
 
@@ -589,6 +600,91 @@ body.calendar-page .day-title {
 .day-panel-empty {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+/* Vue mensuelle (grille façon Calendrier Apple) */
+
+.month-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+  padding-bottom: 0.75rem;
+}
+
+.month-toolbar-title {
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 9rem;
+  text-align: center;
+}
+
+.month-grid-weekdays {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.month-grid-weekdays span {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.month-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(2.6rem, 1fr);
+}
+
+.month-grid-cell {
+  background: none;
+  border: none;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0;
+}
+
+.month-grid-cell-blank { cursor: default; }
+
+.month-grid-daynum {
+  font-size: 0.9rem;
+  color: var(--text);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.month-grid-cell.is-weekend .month-grid-daynum { color: var(--muted); }
+
+.month-grid-cell.is-today .month-grid-daynum { background: #ef4444; color: white; }
+
+.month-grid-cell.is-past { cursor: default; }
+
+.month-grid-cell:not(.is-past):not(.is-today):hover .month-grid-daynum { background: var(--surface-hover); }
+
+.month-grid-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 .calendar-events {
