@@ -174,7 +174,7 @@ def archives(request: Request, category: str = "Toutes", q: str = "", limit: int
 
 
 CALENDAR_WINDOW_BEFORE = 7  # jours de marge arrière autour du jour ciblé
-CALENDAR_WINDOW_AFTER = 60  # jours affichés en avant (au-delà : liste "Plus tard")
+CALENDAR_WINDOW_AFTER = 60  # jours affichés en avant dans le slider
 
 
 @app.get("/calendar")
@@ -193,13 +193,10 @@ def calendar_page(request: Request, date: Optional[str] = None):
         events = list_upcoming_events(conn, today.isoformat())
 
     events_by_date: dict[str, list] = {}
-    later_events = []
     window_start_iso, window_end_iso = window_start.isoformat(), window_end.isoformat()
     for ev in events:
         if window_start_iso <= ev["event_date"] <= window_end_iso:
             events_by_date.setdefault(ev["event_date"], []).append(ev)
-        elif ev["event_date"] > window_end_iso:
-            later_events.append(ev)
 
     window_dates = [
         (window_start + timedelta(days=i)).isoformat()
@@ -212,7 +209,6 @@ def calendar_page(request: Request, date: Optional[str] = None):
             "request": request,
             "window_dates": window_dates,
             "events_by_date": events_by_date,
-            "later_events": later_events,
             "center_date": center.isoformat(),
             "today_iso": today.isoformat(),
             "categories": CATEGORIES,

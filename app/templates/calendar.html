@@ -53,20 +53,6 @@
     {% endfor %}
   </div>
 
-  {% if later_events %}
-  <div class="calendar-later">
-    <h2 class="calendar-later-heading">Plus tard</h2>
-    <ul class="calendar-later-list">
-      {% for ev in later_events %}
-      <li class="calendar-event-row calendar-later-row">
-        <a class="calendar-later-date" href="/calendar?date={{ ev.event_date }}">{{ ev.event_date | day_number }} {{ ev.event_date | month_year | lower }}</a>
-        {% include "_calendar_event_row.html" %}
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endif %}
-
   <div class="modal-backdrop" id="event-modal-backdrop" hidden>
     <div class="modal">
       <button type="button" class="modal-close" id="event-modal-close-btn" aria-label="Fermer">&times;</button>
