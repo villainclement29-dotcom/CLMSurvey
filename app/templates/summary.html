@@ -38,6 +38,10 @@
 
     <hr class="article-divider">
 
+    {% if item.image_url %}
+    <img class="article-image" src="{{ item.image_url }}" alt="" loading="lazy" onerror="this.remove()">
+    {% endif %}
+
     {% if item.ai_summary %}
       <p class="summary-text">{{ item.ai_summary }}</p>
     {% else %}

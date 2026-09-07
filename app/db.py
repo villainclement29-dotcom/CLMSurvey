@@ -28,7 +28,8 @@ SCHEMA_STATEMENTS = [
         url TEXT NOT NULL UNIQUE,
         summary TEXT,
         published_at TEXT,
-        fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
+        fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
+        image_url TEXT
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_items_category ON items(category)",
@@ -165,6 +166,10 @@ def init_db():
             conn.execute("ALTER TABLE items ADD COLUMN ai_summary TEXT")
         except Exception:
             pass  # colonne déjà présente (migration idempotente)
+        try:
+            conn.execute("ALTER TABLE items ADD COLUMN image_url TEXT")
+        except Exception:
+            pass  # colonne déjà présente (migration idempotente)
         _migrate_events_item_id_nullable(conn)
         conn.commit()
     _schema_ready = True
@@ -204,14 +209,17 @@ def _migrate_events_item_id_nullable(conn):
         pass
 
 
-def insert_item(conn, source: str, category: str, title: str, url: str, summary: str, published_at: str):
+def insert_item(
+    conn, source: str, category: str, title: str, url: str, summary: str, published_at: str,
+    image_url: str | None = None,
+):
     """Insère un article. Retourne son id, ou None si l'URL existe déjà (dédup)."""
     if conn.execute("SELECT 1 FROM items WHERE url = ?", (url,)):
         return None
     rows = conn.execute(
-        "INSERT INTO items (source, category, title, url, summary, published_at) "
-        "VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
-        (source, category, title, url, summary, published_at),
+        "INSERT INTO items (source, category, title, url, summary, published_at, image_url) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        (source, category, title, url, summary, published_at, image_url),
     )
     return rows[0]["id"]
 

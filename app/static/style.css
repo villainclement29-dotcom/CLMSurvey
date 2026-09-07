@@ -287,6 +287,15 @@ button {
   margin: 0 0 1.75rem;
 }
 
+.article-image {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin: 0 0 1.75rem;
+}
+
 .summary-text {
   font-size: 1.2rem;
   line-height: 1.75;
@@ -693,17 +702,19 @@ body.calendar-page #month-view {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.6rem;
   min-width: 0;
 }
 
 .calendar-event-row { min-width: 0; }
 
 .calendar-event {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   background: var(--cat-color, var(--accent));
-  border-radius: 9px;
-  padding: 0.6rem 0.8rem;
+  border-radius: 14px;
+  padding: 0.9rem 1.2rem;
   text-decoration: none;
   color: white;
   min-width: 0;
@@ -723,12 +734,20 @@ body.calendar-page #month-view {
 
 .calendar-event-title {
   display: block;
+  flex: 1;
   min-width: 0;
-  font-size: 0.9rem;
+  font-size: 1.35rem;
   font-weight: 600;
   white-space: normal;
   overflow-wrap: break-word;
 }
+
+.calendar-event-icon {
+  flex-shrink: 0;
+  display: flex;
+}
+
+.calendar-event-icon .icon-svg { width: 1.3rem; height: 1.3rem; }
 
 .event-form {
   display: flex;

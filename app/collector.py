@@ -27,6 +27,7 @@ def run_collection() -> int:
                 item["url"],
                 item["summary"],
                 item["published_at"],
+                item.get("image_url"),
             )
             if item_id is None:
                 continue

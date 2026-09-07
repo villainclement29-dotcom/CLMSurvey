@@ -1,9 +1,12 @@
+{% import "_icons.html" as icons %}
 {% if ev.item_id %}
 <a class="calendar-event" href="/article/{{ ev.item_id }}" data-category="{{ ev.category }}" data-event-id="{{ ev.id }}" data-event-title="{{ ev.title }}">
   <span class="calendar-event-title">{{ ev.title }}</span>
+  <span class="calendar-event-icon">{{ icons.cat_icon(ev.category) }}</span>
 </a>
 {% else %}
 <span class="calendar-event" data-category="{{ ev.category }}" data-event-id="{{ ev.id }}" data-event-title="{{ ev.title }}">
   <span class="calendar-event-title">{{ ev.title }}</span>
+  <span class="calendar-event-icon">{{ icons.cat_icon(ev.category) }}</span>
 </span>
 {% endif %}

@@ -32,9 +32,37 @@ def fetch_rss_items() -> list[dict]:
                     "url": entry.get("link"),
                     "summary": _clean_summary(entry.get("summary", "")),
                     "published_at": published_at,
+                    "image_url": _extract_image(entry),
                 }
             )
     return [i for i in items if i["url"]]
+
+
+_IMG_TAG_RE = None  # compilé au premier appel (voir _extract_image)
+
+
+def _extract_image(entry) -> str | None:
+    """Cherche une image illustrant l'article : d'abord les champs RSS
+    dédiés (media:thumbnail/media:content, souvent absents des flux
+    qu'on suit), sinon la première <img> présente dans le contenu complet
+    ou le résumé HTML (ex: NASA, ESA, The Verge en embarquent une)."""
+    import html
+    import re
+
+    global _IMG_TAG_RE
+    if _IMG_TAG_RE is None:
+        _IMG_TAG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
+
+    for key in ("media_thumbnail", "media_content"):
+        media = entry.get(key)
+        if media and media[0].get("url"):
+            return html.unescape(media[0]["url"])
+
+    content = entry.get("content")
+    content_html = content[0].get("value", "") if content else ""
+    summary_html = entry.get("summary", "")
+    match = _IMG_TAG_RE.search(content_html) or _IMG_TAG_RE.search(summary_html)
+    return html.unescape(match.group(1)) if match else None
 
 
 def _extract_date(entry) -> str:
