@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime
+from datetime import date as _date
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -43,7 +44,6 @@ from app.formatting import (
     days_until,
     format_date,
     group_by_date,
-    group_events_by_date,
     is_today_str,
     month_year_label,
     split_today,
@@ -173,15 +173,50 @@ def archives(request: Request, category: str = "Toutes", q: str = "", limit: int
     )
 
 
+CALENDAR_WINDOW_BEFORE = 7  # jours de marge arrière autour du jour ciblé
+CALENDAR_WINDOW_AFTER = 60  # jours affichés en avant (au-delà : liste "Plus tard")
+
+
 @app.get("/calendar")
-def calendar_page(request: Request):
-    today_iso = datetime.utcnow().date().isoformat()
+def calendar_page(request: Request, date: Optional[str] = None):
+    today = datetime.utcnow().date()
+    try:
+        center = _date.fromisoformat(date) if date else today
+    except ValueError:
+        center = today
+    # La marge arrière ne remonte jamais avant aujourd'hui : c'est un
+    # calendrier d'évènements à venir, pas un historique.
+    window_start = max(center - timedelta(days=CALENDAR_WINDOW_BEFORE), today)
+    window_end = center + timedelta(days=CALENDAR_WINDOW_AFTER)
+
     with get_conn() as conn:
-        events = list_upcoming_events(conn, today_iso)
-    groups = group_events_by_date(events)
+        events = list_upcoming_events(conn, today.isoformat())
+
+    events_by_date: dict[str, list] = {}
+    later_events = []
+    window_start_iso, window_end_iso = window_start.isoformat(), window_end.isoformat()
+    for ev in events:
+        if window_start_iso <= ev["event_date"] <= window_end_iso:
+            events_by_date.setdefault(ev["event_date"], []).append(ev)
+        elif ev["event_date"] > window_end_iso:
+            later_events.append(ev)
+
+    window_dates = [
+        (window_start + timedelta(days=i)).isoformat()
+        for i in range((window_end - window_start).days + 1)
+    ]
+
     return templates.TemplateResponse(
         "calendar.html",
-        {"request": request, "groups": groups, "categories": CATEGORIES},
+        {
+            "request": request,
+            "window_dates": window_dates,
+            "events_by_date": events_by_date,
+            "later_events": later_events,
+            "center_date": center.isoformat(),
+            "today_iso": today.isoformat(),
+            "categories": CATEGORIES,
+        },
     )
 
 

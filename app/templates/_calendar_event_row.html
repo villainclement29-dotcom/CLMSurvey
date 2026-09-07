@@ -1,0 +1,14 @@
+{% if ev.item_id %}
+<a class="calendar-event" href="/article/{{ ev.item_id }}">
+  <span class="calendar-event-dot" data-category="{{ ev.category }}"></span>
+  <span class="calendar-event-title">{{ ev.title }}</span>
+</a>
+{% else %}
+<span class="calendar-event">
+  <span class="calendar-event-dot" data-category="{{ ev.category }}"></span>
+  <span class="calendar-event-title">{{ ev.title }}</span>
+</span>
+{% endif %}
+<form method="post" action="/calendar/events/{{ ev.id }}/delete">
+  <button type="submit" class="calendar-event-delete" title="Supprimer l'événement">&times;</button>
+</form>
