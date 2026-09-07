@@ -43,8 +43,10 @@ from app.formatting import (
     day_number,
     days_until,
     format_date,
+    full_date_label,
     group_by_date,
     is_today_str,
+    month_abbr_label,
     month_year_label,
     split_today,
     weekday_label,
@@ -106,6 +108,8 @@ templates.env.filters["weekday"] = weekday_label
 templates.env.filters["day_number"] = day_number
 templates.env.filters["month_year"] = month_year_label
 templates.env.filters["is_today"] = is_today_str
+templates.env.filters["full_date"] = full_date_label
+templates.env.filters["month_abbr"] = month_abbr_label
 
 init_db()
 

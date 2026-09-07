@@ -8,6 +8,13 @@ MONTHS_FR = [
 ]
 
 WEEKDAYS_FR_ABBR = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+WEEKDAYS_FR = [
+    "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche",
+]
+MONTHS_FR_ABBR = [
+    "janv.", "févr.", "mars", "avr.", "mai", "juin",
+    "juil.", "août", "sept.", "oct.", "nov.", "déc.",
+]
 
 
 def _parse_date(published_at: str) -> date | None:
@@ -96,3 +103,15 @@ def month_year_label(event_date: str) -> str:
 def is_today_str(event_date: str, today: date | None = None) -> bool:
     today = today or datetime.utcnow().date()
     return date.fromisoformat(event_date) == today
+
+
+def full_date_label(event_date: str) -> str:
+    """Ex: 'Lundi 7 septembre 2026' — libellé du jour affiché dans le slider."""
+    d = date.fromisoformat(event_date)
+    return f"{WEEKDAYS_FR[d.weekday()]} {d.day} {MONTHS_FR[d.month - 1]} {d.year}"
+
+
+def month_abbr_label(event_date: str) -> str:
+    """Ex: 'sept.' — utilisé dans le bandeau de dates, compact."""
+    d = date.fromisoformat(event_date)
+    return MONTHS_FR_ABBR[d.month - 1]

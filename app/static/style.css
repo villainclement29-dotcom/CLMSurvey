@@ -473,74 +473,106 @@ button {
 
 .icon-only-btn[data-subscribed="1"] { color: var(--accent); border-color: var(--accent); }
 
-.day-toolbar {
+/* Page calendrier : container plein écran (hauteur de la fenêtre visible),
+   pour que le slider jour par jour occupe tout l'espace restant sous le
+   header et le bandeau de dates — important sur mobile, où c'est la
+   principale surface de l'app. Scopé à cette page via body.calendar-page :
+   les autres pages gardent leur mise en page normale (scroll de page). */
+body.calendar-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem 0;
+  box-sizing: border-box;
+}
+
+body.calendar-page header,
+body.calendar-page .date-strip-header,
+body.calendar-page .day-title {
+  flex: 0 0 auto;
+}
+
+.date-strip-header {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0 0 1rem;
-  flex-wrap: wrap;
+  padding: 0.9rem 0 0.6rem;
 }
 
-.day-toolbar-title {
+.date-strip-month {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.date-strip {
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  overflow: hidden;
+  gap: 0.35rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-.day-toolbar-weekday {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #ef4444;
-  flex-shrink: 0;
-}
+.date-strip::-webkit-scrollbar { display: none; }
 
-.day-toolbar-date {
-  font-family: "Times New Roman", Times, Georgia, serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.day-today-btn {
-  background: var(--surface);
+.date-strip-day {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.day-today-btn:hover { background: var(--surface-hover); }
-
-.day-date-input {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 0.45rem 0.7rem;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-family: inherit;
-  min-width: 0;
-  max-width: 140px;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-strip-day.is-today { color: #ef4444; font-weight: 700; }
+
+.date-strip-day.is-active { background: var(--surface); font-weight: 700; }
+
+.date-strip-grid-btn {
+  flex-shrink: 0;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  cursor: default;
+}
+
+.date-strip-grid-btn .icon-svg { width: 1em; height: 1em; }
+
+.day-title {
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0.8rem;
 }
 
 .day-slider {
   display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  margin: 0 -2rem;
+  margin: 0 -1.5rem;
 }
 
 .day-panel {
@@ -549,42 +581,9 @@ button {
   max-width: 100%;
   scroll-snap-align: start;
   box-sizing: border-box;
-  padding: 1.25rem 2rem;
-  min-height: 40vh;
-}
-
-.day-panel-header {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  margin-bottom: 1.1rem;
-}
-
-.day-panel-weekday {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #ef4444;
-}
-
-.day-panel-daynum {
-  font-family: "Times New Roman", Times, Georgia, serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.day-panel-daynum.is-today { background: #ef4444; color: white; }
-
-.day-panel-month {
-  color: var(--muted);
-  font-size: 0.9rem;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .day-panel-empty {

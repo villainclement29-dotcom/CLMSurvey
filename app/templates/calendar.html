@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
   {% include "_pwa_head.html" %}
 </head>
-<body>
+<body class="calendar-page">
   {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
@@ -20,25 +20,26 @@
     </div>
   </header>
 
-  <div class="day-toolbar">
-    <button type="button" class="icon-only-btn" id="day-prev-btn" aria-label="Jour précédent">‹</button>
-    <div class="day-toolbar-title">
-      <span class="day-toolbar-weekday" id="day-toolbar-weekday">{{ center_date | weekday }}</span>
-      <span class="day-toolbar-date" id="day-toolbar-date">{{ center_date | day_number }} {{ center_date | month_year | lower }}</span>
+  <div class="date-strip-header">
+    <span class="date-strip-month" id="date-strip-month">{{ center_date | month_abbr }}</span>
+    <div class="date-strip" id="date-strip">
+      {% for day_iso in window_dates %}
+      <button
+        type="button"
+        class="date-strip-day {{ 'is-active' if day_iso == center_date else '' }} {{ 'is-today' if day_iso | is_today else '' }}"
+        data-date="{{ day_iso }}"
+        data-month="{{ day_iso | month_abbr }}"
+      >{{ day_iso | day_number }}</button>
+      {% endfor %}
     </div>
-    <button type="button" class="icon-only-btn" id="day-next-btn" aria-label="Jour suivant">›</button>
-    <button type="button" class="day-today-btn" id="day-today-btn">Aujourd'hui</button>
-    <input type="date" class="day-date-input" id="day-date-input" value="{{ center_date }}" min="{{ today_iso }}">
+    <button type="button" class="date-strip-grid-btn" title="Vue mensuelle (bientôt disponible)" aria-disabled="true">{{ icons.grid() }}</button>
   </div>
+
+  <p class="day-title" id="day-title">{{ center_date | full_date }}</p>
 
   <div class="day-slider" id="day-slider">
     {% for day_iso in window_dates %}
-    <div class="day-panel" data-date="{{ day_iso }}">
-      <div class="day-panel-header">
-        <span class="day-panel-weekday">{{ day_iso | weekday }}</span>
-        <span class="day-panel-daynum {{ 'is-today' if day_iso | is_today else '' }}">{{ day_iso | day_number }}</span>
-        <span class="day-panel-month">{{ day_iso | month_year }}</span>
-      </div>
+    <div class="day-panel" data-date="{{ day_iso }}" data-full-date="{{ day_iso | full_date }}">
       {% set day_events = events_by_date.get(day_iso, []) %}
       {% if day_events %}
       <ul class="calendar-events">
@@ -143,18 +144,18 @@
     (function () {
       // Slider jour par jour : chaque panneau fait 100% de large, le
       // scroll natif (scroll-snap) gère le swipe tactile sans JS. On se
-      // contente de synchroniser le titre de la barre d'outils avec le
-      // panneau actuellement visible, et de gérer les boutons/le champ date.
+      // contente de synchroniser le bandeau de dates (mois + jour actif)
+      // avec le panneau actuellement visible, et de gérer les taps sur
+      // le bandeau pour naviguer.
       var slider = document.getElementById("day-slider");
       var panels = Array.prototype.slice.call(slider.querySelectorAll(".day-panel"));
       if (!panels.length) return;
 
-      var todayIso = "{{ today_iso }}";
       var centerIso = "{{ center_date }}";
-      var weekdayEl = document.getElementById("day-toolbar-weekday");
-      var dateEl = document.getElementById("day-toolbar-date");
-      var dateInput = document.getElementById("day-date-input");
-      var currentIndex = 0;
+      var monthEl = document.getElementById("date-strip-month");
+      var titleEl = document.getElementById("day-title");
+      var strip = document.getElementById("date-strip");
+      var stripDays = Array.prototype.slice.call(strip.querySelectorAll(".date-strip-day"));
 
       function panelIndex(iso) {
         for (var i = 0; i < panels.length; i++) {
@@ -163,14 +164,24 @@
         return -1;
       }
 
-      function updateToolbar(panel) {
-        weekdayEl.textContent = panel.querySelector(".day-panel-weekday").textContent;
-        dateEl.textContent = panel.querySelector(".day-panel-daynum").textContent + " " +
-          panel.querySelector(".day-panel-month").textContent.toLowerCase();
-        dateInput.value = panel.dataset.date;
+      function updateHeader(panel) {
+        monthEl.textContent = panel.dataset.date ? stripDayFor(panel.dataset.date).dataset.month : "";
+        titleEl.textContent = panel.dataset.fullDate;
+        stripDays.forEach(function (btn) {
+          btn.classList.toggle("is-active", btn.dataset.date === panel.dataset.date);
+        });
+        var activeBtn = stripDayFor(panel.dataset.date);
+        if (activeBtn) activeBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
         var url = new URL(window.location.href);
         url.searchParams.set("date", panel.dataset.date);
         history.replaceState(null, "", url);
+      }
+
+      function stripDayFor(iso) {
+        for (var i = 0; i < stripDays.length; i++) {
+          if (stripDays[i].dataset.date === iso) return stripDays[i];
+        }
+        return null;
       }
 
       function scrollToIndex(index, smooth) {
@@ -186,8 +197,7 @@
         function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-              currentIndex = panels.indexOf(entry.target);
-              updateToolbar(entry.target);
+              updateHeader(entry.target);
             }
           });
         },
@@ -197,42 +207,14 @@
 
       var startIndex = panelIndex(centerIso);
       if (startIndex === -1) startIndex = 0;
-      currentIndex = startIndex;
       scrollToIndex(startIndex, false);
 
-      document.getElementById("day-prev-btn").addEventListener("click", function () {
-        if (currentIndex > 0) {
-          scrollToIndex(currentIndex - 1, true);
-        } else {
-          var d = new Date(panels[0].dataset.date + "T00:00:00");
-          d.setDate(d.getDate() - 1);
-          window.location.href = "/calendar?date=" + d.toISOString().slice(0, 10);
-        }
-      });
-
-      document.getElementById("day-next-btn").addEventListener("click", function () {
-        if (currentIndex < panels.length - 1) {
-          scrollToIndex(currentIndex + 1, true);
-        } else {
-          var d = new Date(panels[panels.length - 1].dataset.date + "T00:00:00");
-          d.setDate(d.getDate() + 1);
-          window.location.href = "/calendar?date=" + d.toISOString().slice(0, 10);
-        }
-      });
-
-      document.getElementById("day-today-btn").addEventListener("click", function () {
-        var idx = panelIndex(todayIso);
+      strip.addEventListener("click", function (e) {
+        var btn = e.target.closest(".date-strip-day");
+        if (!btn) return;
+        var idx = panelIndex(btn.dataset.date);
         if (idx === -1) {
-          window.location.href = "/calendar";
-        } else {
-          scrollToIndex(idx, true);
-        }
-      });
-
-      dateInput.addEventListener("change", function () {
-        var idx = panelIndex(dateInput.value);
-        if (idx === -1) {
-          window.location.href = "/calendar?date=" + dateInput.value;
+          window.location.href = "/calendar?date=" + btn.dataset.date;
         } else {
           scrollToIndex(idx, true);
         }
