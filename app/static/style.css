@@ -11,6 +11,15 @@
   --cat-espace: #60a5fa;
   --cat-astronomie: #fbbf24;
   --cat-physique: #34d399;
+  /* Variantes pleines, volontairement fixes (pas de bascule clair/sombre) :
+     les couleurs ci-dessus sont pensées pour du texte sur fond neutre, trop
+     claires (surtout l'ambre) pour porter du texte blanc en fond plein
+     (contraste insuffisant). Utilisées uniquement là où la couleur de
+     catégorie sert de fond, ex. les évènements du calendrier. */
+  --cat-ia-solid: #7c3aed;
+  --cat-espace-solid: #2563eb;
+  --cat-astronomie-solid: #b45309;
+  --cat-physique-solid: #059669;
 }
 
 @media (prefers-color-scheme: light) {
@@ -43,6 +52,14 @@ body {
   font-family: "Times New Roman", Times, Georgia, serif;
 }
 
+/* Le padding généreux de 2rem mange trop d'espace utile sur un écran de
+   téléphone (jusqu'à 64px perdus en largeur) : réduit sur mobile. Ne
+   s'applique pas à body.calendar-page, qui a déjà son propre padding
+   plus serré. */
+@media (max-width: 480px) {
+  body:not(.calendar-page) { padding: 1.25rem 1rem; }
+}
+
 header {
   display: flex;
   justify-content: space-between;
@@ -71,7 +88,7 @@ button {
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.85rem;
 }
@@ -120,8 +137,8 @@ button {
   background: none;
   color: var(--muted);
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   font-size: 1rem;
   line-height: 1;
@@ -140,15 +157,15 @@ button {
 
 .item {
   display: block;
-  padding: 1.1rem 2.6rem 1.1rem 0;
+  padding: 1.1rem 3.4rem 1.1rem 0;
   text-decoration: none;
   color: inherit;
 }
 
-[data-category="IA"] { --cat-color: var(--cat-ia); }
-[data-category="Espace"] { --cat-color: var(--cat-espace); }
-[data-category="Astronomie"] { --cat-color: var(--cat-astronomie); }
-[data-category="Physique"] { --cat-color: var(--cat-physique); }
+[data-category="IA"] { --cat-color: var(--cat-ia); --cat-color-solid: var(--cat-ia-solid); }
+[data-category="Espace"] { --cat-color: var(--cat-espace); --cat-color-solid: var(--cat-espace-solid); }
+[data-category="Astronomie"] { --cat-color: var(--cat-astronomie); --cat-color-solid: var(--cat-astronomie-solid); }
+[data-category="Physique"] { --cat-color: var(--cat-physique); --cat-color-solid: var(--cat-physique-solid); }
 
 .badge {
   display: flex;
@@ -184,7 +201,7 @@ button {
 .favicon {
   width: 14px;
   height: 14px;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .summary {
@@ -292,7 +309,7 @@ button {
   width: 100%;
   max-height: 320px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 0;
   margin: 0 0 1.75rem;
 }
 
@@ -321,7 +338,7 @@ button {
   height: 28px;
   border: 3px solid var(--border);
   border-top-color: var(--cat-color, var(--accent));
-  border-radius: 50%;
+  border-radius: 50%; /* seule exception : un spinner carré ne se lit pas comme un chargement */
   animation: spin 0.8s linear infinite;
 }
 
@@ -339,7 +356,7 @@ button {
 .folder-list {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -392,7 +409,7 @@ button {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 0;
   padding: 1.75rem;
   width: 100%;
   max-width: 420px;
@@ -418,7 +435,7 @@ button {
 #modal-step-1 input[type="text"] {
   width: 100%;
   padding: 0.6rem 0.8rem;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
@@ -468,9 +485,9 @@ button {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 0;
   padding: 0;
   display: flex;
   align-items: center;
@@ -544,9 +561,9 @@ body.calendar-page #month-view {
   color: var(--text);
   font-size: 0.9rem;
   font-family: inherit;
-  width: 2.1rem;
-  height: 2.1rem;
-  border-radius: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -561,9 +578,9 @@ body.calendar-page #month-view {
   background: var(--surface);
   color: var(--muted);
   border: 1px solid var(--border);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  border-radius: 0;
   padding: 0;
   display: flex;
   align-items: center;
@@ -675,7 +692,7 @@ body.calendar-page #month-view {
   color: var(--text);
   width: 1.8rem;
   height: 1.8rem;
-  border-radius: 50%;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -692,7 +709,7 @@ body.calendar-page #month-view {
 .month-grid-dot {
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--accent);
 }
 
@@ -712,8 +729,8 @@ body.calendar-page #month-view {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  background: var(--cat-color, var(--accent));
-  border-radius: 14px;
+  background: var(--cat-color-solid, var(--accent));
+  border-radius: 0;
   padding: 0.9rem 1.2rem;
   text-decoration: none;
   color: white;
@@ -759,7 +776,7 @@ body.calendar-page #month-view {
 .event-form select {
   width: 100%;
   padding: 0.6rem 0.8rem;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
@@ -789,10 +806,10 @@ body.calendar-page #month-view {
 .menu-toggle {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  border-radius: 0;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -807,7 +824,7 @@ body.calendar-page #month-view {
   width: 18px;
   height: 2px;
   background: var(--text);
-  border-radius: 1px;
+  border-radius: 0;
 }
 
 .sidebar-backdrop {
@@ -869,7 +886,7 @@ body.calendar-page #month-view {
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.6rem;
-  border-radius: 8px;
+  border-radius: 0;
   color: var(--text);
   text-decoration: none;
   font-size: 0.9rem;
@@ -893,7 +910,7 @@ body.calendar-page #month-view {
   flex: 1;
   max-width: 360px;
   padding: 0.55rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
@@ -923,7 +940,7 @@ body.calendar-page #month-view {
   font-size: 0.68rem;
   max-width: 84px;
   padding: 0.3rem 0.4rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
@@ -948,7 +965,7 @@ body.calendar-page #month-view {
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.65rem 0.9rem;
   font-size: 0.88rem;
   cursor: pointer;
@@ -979,7 +996,7 @@ body.calendar-page #month-view {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.5rem 0.9rem;
   font-size: 0.85rem;
   font-weight: 600;
@@ -991,7 +1008,7 @@ body.calendar-page #month-view {
 .filter-active-badge {
   background: var(--accent);
   color: white;
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.1rem 0.55rem;
   font-size: 0.72rem;
 }
@@ -1003,7 +1020,7 @@ body.calendar-page #month-view {
   z-index: 5;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.4rem;
   min-width: 200px;
   box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.35);
@@ -1017,7 +1034,7 @@ body.calendar-page #month-view {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.6rem;
-  border-radius: 6px;
+  border-radius: 0;
   color: var(--text);
   text-decoration: none;
   font-size: 0.88rem;
@@ -1041,7 +1058,7 @@ body.calendar-page #month-view {
   background: var(--text);
   color: var(--bg);
   padding: 0.6rem 1.1rem;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 0.85rem;
   font-weight: 600;
   z-index: 1000;
