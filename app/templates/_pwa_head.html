@@ -9,3 +9,8 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
   }
 </script>
+{# Navigation façon SPA : Turbo intercepte les clics sur les liens et les
+   soumissions de formulaire pour ne charger que le contenu qui change
+   (fetch + remplacement du <body>), au lieu d'un rechargement complet à
+   chaque page. Auto-démarre dès son chargement. #}
+<script src="/static/js/turbo.min.js"></script>

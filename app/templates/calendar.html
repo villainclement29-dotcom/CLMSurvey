@@ -243,7 +243,7 @@
         if (!btn) return;
         var idx = panelIndex(btn.dataset.date);
         if (idx === -1) {
-          window.location.href = "/calendar?date=" + btn.dataset.date;
+          Turbo.visit("/calendar?date=" + btn.dataset.date);
         } else {
           scrollToIndex(idx, true);
         }
@@ -311,7 +311,7 @@
 
           if (iso >= todayIso) {
             cell.addEventListener("click", function () {
-              window.location.href = "/calendar?date=" + this.dataset.date;
+              Turbo.visit("/calendar?date=" + this.dataset.date);
             });
           }
           cell.dataset.date = iso;
@@ -366,19 +366,19 @@
       var LONG_PRESS_MS = 500;
       var MOVE_THRESHOLD = 10;
 
-      var backdrop = document.getElementById("event-edit-backdrop");
-      var closeBtn = document.getElementById("event-edit-close-btn");
-      var editForm = document.getElementById("event-edit-form");
-      var editNext = document.getElementById("event-edit-next");
-      var titleInput = document.getElementById("event-edit-title-input");
-      var deleteForm = document.getElementById("event-delete-form");
-      var deleteNext = document.getElementById("event-delete-next");
-
-      function closeEditModal() { backdrop.hidden = true; }
-      closeBtn.addEventListener("click", closeEditModal);
-      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeEditModal(); });
+      function closeEditModal() {
+        var backdrop = document.getElementById("event-edit-backdrop");
+        if (backdrop) backdrop.hidden = true;
+      }
 
       function openEditModal(el) {
+        var backdrop = document.getElementById("event-edit-backdrop");
+        var editForm = document.getElementById("event-edit-form");
+        var editNext = document.getElementById("event-edit-next");
+        var titleInput = document.getElementById("event-edit-title-input");
+        var deleteForm = document.getElementById("event-delete-form");
+        var deleteNext = document.getElementById("event-delete-next");
+        if (!backdrop) return;
         var panel = el.closest(".day-panel");
         var next = "/calendar?date=" + (panel ? panel.dataset.date : "{{ today_iso }}");
         editForm.action = "/calendar/events/" + el.dataset.eventId + "/edit";
@@ -389,6 +389,27 @@
         backdrop.hidden = false;
         titleInput.focus();
       }
+
+      // Boutons fermer/fond du modal : recréés à chaque navigation Turbo,
+      // donc rebranchés à chaque exécution (sans risque, cf. plus bas).
+      var closeBtn = document.getElementById("event-edit-close-btn");
+      var editBackdrop = document.getElementById("event-edit-backdrop");
+      if (closeBtn) closeBtn.addEventListener("click", closeEditModal);
+      if (editBackdrop) {
+        editBackdrop.addEventListener("click", function (e) {
+          if (e.target === editBackdrop) closeEditModal();
+        });
+      }
+
+      // Les listeners ci-dessous sont posés sur document, qui persiste
+      // d'une navigation Turbo à l'autre (seul le <body> est remplacé) :
+      // ne les poser qu'une seule fois pour toute la session, sous peine
+      // de les empiler à chaque retour sur cette page. openEditModal/
+      // closeEditModal cherchent toujours les éléments courants au moment
+      // de l'appel, donc rester lié à cette exécution-ci ne pose pas de
+      // problème même après plusieurs navigations.
+      if (window.__calendarLongPressBound) return;
+      window.__calendarLongPressBound = true;
 
       var pressTimer = null;
       var pressTarget = null;

@@ -18,15 +18,27 @@
 
 <script>
   (function () {
+    // Le bouton et le menu sont recréés à chaque navigation Turbo : ce
+    // binding-là se refait donc à chaque fois (sans risque, les anciens
+    // éléments/listeners disparaissent avec l'ancien <body>). Le listener
+    // "clic en dehors" est en revanche sur document, qui persiste d'une
+    // page à l'autre : il ne doit être posé qu'une seule fois pour toute
+    // la session, avec une recherche de l'élément à chaque déclenchement.
     var btn = document.getElementById("filter-toggle-btn");
     var dropdown = document.getElementById("filter-dropdown");
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       dropdown.hidden = !dropdown.hidden;
     });
+
+    if (window.__filterDropdownDocBound) return;
+    window.__filterDropdownDocBound = true;
+
     document.addEventListener("click", function (e) {
-      if (!dropdown.hidden && !dropdown.contains(e.target) && e.target !== btn) {
-        dropdown.hidden = true;
+      var dd = document.getElementById("filter-dropdown");
+      var toggleBtn = document.getElementById("filter-toggle-btn");
+      if (dd && !dd.hidden && !dd.contains(e.target) && e.target !== toggleBtn) {
+        dd.hidden = true;
       }
     });
   })();

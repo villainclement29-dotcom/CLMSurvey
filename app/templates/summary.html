@@ -72,10 +72,14 @@
       // Revient à la page précédente (liste, archives, favoris...) telle
       // qu'elle était (filtre, recherche, scroll) ; repli sur l'accueil si
       // l'article a été ouvert directement, sans historique de navigation.
-      if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
+      // document.referrer ne convient plus ici : avec Turbo, les
+      // navigations dans l'app réutilisent le même document (pushState),
+      // donc document.referrer reste figé sur le tout premier chargement
+      // réel de l'onglet au lieu de refléter la page précédente.
+      if (window.history.length > 1) {
         history.back();
       } else {
-        window.location.href = "/";
+        Turbo.visit("/");
       }
     });
   </script>

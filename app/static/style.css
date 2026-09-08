@@ -970,6 +970,13 @@ body.calendar-page #month-view {
 
 .filter-dropdown-link.active { background: var(--accent); color: white; }
 
+/* Barre de progression Turbo (navigations un peu lentes) : couleur de
+   l'app, coins carrés (cf. choix visuel du reste du site), pas d'ombre. */
+.turbo-progress-bar {
+  height: 2px;
+  background-color: var(--accent);
+}
+
 /* L'animation d'intro (système solaire) a son propre <style> inline dans
    _intro_splash.html : elle doit pouvoir s'afficher avant même que ce
    fichier soit chargé, pour servir d'écran de chargement. */

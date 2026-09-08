@@ -2,13 +2,20 @@
 
 <script>
   (function () {
-    // Délégation sur document (pas de binding direct sur les boutons) :
-    // fonctionne aussi pour les cartes chargées après coup, par ex. le
-    // scroll infini des archives.
-    var toast = document.getElementById("share-toast");
+    // Délégation sur document, liée une seule fois pour toute la session
+    // (persiste à travers les navigations Turbo, qui ne remplacent que le
+    // <body> : réexécuter ce script à chaque page empilerait un nouveau
+    // listener à chaque fois). L'élément #toast est donc recherché à
+    // chaque déclenchement plutôt que capturé une fois, puisque Turbo le
+    // recrée à chaque page.
+    if (window.__shareToastBound) return;
+    window.__shareToastBound = true;
+
     var toastTimer = null;
 
     function showToast(text) {
+      var toast = document.getElementById("share-toast");
+      if (!toast) return;
       toast.textContent = text;
       toast.hidden = false;
       requestAnimationFrame(function () { toast.classList.add("visible"); });
