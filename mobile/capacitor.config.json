@@ -8,6 +8,7 @@
     "allowNavigation": ["*"]
   },
   "ios": {
-    "contentInset": "automatic"
+    "contentInset": "never",
+    "backgroundColor": "#0f1115"
   }
 }
