@@ -64,7 +64,12 @@ body {
    .calendar-page), qui gèrent leur propre padding par section (voir plus
    bas) via --shell-px. */
 @media (max-width: 480px) {
-  body:not(.calendar-page):not(.app-shell) { padding: 1.25rem 1rem; }
+  body:not(.calendar-page):not(.app-shell) {
+    padding: 1.25rem 1rem;
+    /* Le raccourci padding ci-dessus écrase sinon le padding-top adapté
+       à l'encoche défini plus haut : on le repose ici. */
+    padding-top: max(1.25rem, env(safe-area-inset-top));
+  }
   body.app-shell { --shell-px: 1rem; }
 }
 
