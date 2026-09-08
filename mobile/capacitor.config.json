@@ -1,0 +1,13 @@
+{
+  "appId": "com.clementvillain.veillescientifique",
+  "appName": "Veille",
+  "webDir": "www",
+  "server": {
+    "url": "https://clmsurvey.vercel.app",
+    "cleartext": false,
+    "allowNavigation": ["*"]
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
