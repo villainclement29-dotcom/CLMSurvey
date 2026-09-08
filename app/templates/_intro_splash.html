@@ -171,6 +171,18 @@
 </div>
 <script>
   (function () {
+    // Dans l'app iOS (Capacitor), un écran de démarrage natif statique
+    // (même composition que ce splash, cf. mobile/resources/splash*.png)
+    // reste affiché depuis le tout début du lancement jusqu'à ce que
+    // cette page ait fini de charger — ça comble le temps de chargement
+    // réseau (server.url pointe vers le site en ligne) qui précède
+    // l'affichage de ce splash HTML, sans écran noir entre les deux. On
+    // le referme dès que ce script s'exécute : le HTML de ce splash est
+    // déjà prêt à s'afficher à la place, sans coupure visible.
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+      window.Capacitor.Plugins.SplashScreen.hide().catch(function () {});
+    }
+
     var splash = document.getElementById("intro-splash");
     if (!splash) return;
     if (sessionStorage.getItem("introShown")) {
