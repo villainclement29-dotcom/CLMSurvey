@@ -1,0 +1,19 @@
+{% import "_icons.html" as icons %}
+<nav class="bottom-nav">
+  <a href="/" class="bottom-nav-link {{ 'active' if request.url.path == '/' else '' }}">
+    {{ icons.home() }}
+    <span>Accueil</span>
+  </a>
+  <a href="/calendar" class="bottom-nav-link {{ 'active' if request.url.path == '/calendar' else '' }}">
+    {{ icons.calendar() }}
+    <span>Calendrier</span>
+  </a>
+  <a href="/archives" class="bottom-nav-link {{ 'active' if request.url.path == '/archives' else '' }}">
+    {{ icons.archive() }}
+    <span>Archives</span>
+  </a>
+  <a href="/favorites" class="bottom-nav-link {{ 'active' if '/favorites' in request.url.path else '' }}">
+    {{ icons.heart() }}
+    <span>Favoris</span>
+  </a>
+</nav>

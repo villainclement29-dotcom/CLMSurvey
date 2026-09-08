@@ -19,11 +19,10 @@
     }
   </script>
 </head>
-<body>
+<body class="has-bottom-nav">
   {% include "_intro_splash.html" %}
   <header>
     <div class="header-left">
-      {% include "_sidebar_toggle.html" %}
       <h1>Veille scientifique</h1>
     </div>
   </header>
@@ -56,6 +55,7 @@
   </p>
   {% endif %}
   {% include "_folder_picker_modal.html" %}
-  {% include "_sidebar_panel.html" %}
+  {% include "_share_toast.html" %}
+  {% include "_bottom_nav.html" %}
 </body>
 </html>

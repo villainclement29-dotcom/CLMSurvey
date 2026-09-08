@@ -7,11 +7,10 @@
   <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
   {% include "_pwa_head.html" %}
 </head>
-<body>
+<body class="has-bottom-nav">
   {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
-      {% include "_sidebar_toggle.html" %}
       <h1>{{ icons.heart() }} Mes favoris</h1>
     </div>
   </header>
@@ -100,6 +99,7 @@
       step2.hidden = false;
     });
   </script>
-  {% include "_sidebar_panel.html" %}
+  {% include "_share_toast.html" %}
+  {% include "_bottom_nav.html" %}
 </body>
 </html>

@@ -8,12 +8,6 @@
   {% include "_pwa_head.html" %}
 </head>
 <body>
-  <header>
-    <div class="header-left">
-      {% include "_sidebar_toggle.html" %}
-    </div>
-  </header>
-
   {% import "_icons.html" as icons %}
   <article class="summary-card" data-category="{{ item.category }}">
     <button type="button" class="back-link" id="back-btn">← Retour</button>
@@ -72,7 +66,7 @@
     {% endif %}
   </article>
   {% include "_folder_picker_modal.html" %}
-  {% include "_sidebar_panel.html" %}
+  {% include "_share_toast.html" %}
   <script>
     document.getElementById("back-btn").addEventListener("click", function () {
       // Revient à la page précédente (liste, archives, favoris...) telle
