@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{{ title }} — Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
   {% include "_pwa_head.html" %}
 </head>
-<body class="has-bottom-nav">
+<body class="app-shell">
   {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
@@ -15,16 +15,18 @@
     </div>
   </header>
 
-  {% set next_url = next %}
-  {% if items %}
-  <ul class="items">
-    {% for item in items %}
-    {% include "_item_card.html" %}
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="empty">Aucun article ici pour l'instant.</p>
-  {% endif %}
+  <div class="page-scroll">
+    {% set next_url = next %}
+    {% if items %}
+    <ul class="items">
+      {% for item in items %}
+      {% include "_item_card.html" %}
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">Aucun article ici pour l'instant.</p>
+    {% endif %}
+  </div>
   {% include "_share_toast.html" %}
   {% include "_bottom_nav.html" %}
 </body>

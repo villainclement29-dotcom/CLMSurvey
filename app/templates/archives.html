@@ -2,32 +2,35 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Archives — Veille scientifique</title>
   <link rel="stylesheet" href="/static/style.css?v={{ ASSET_VERSION }}">
   {% include "_pwa_head.html" %}
 </head>
-<body class="has-bottom-nav">
+<body class="app-shell">
   {% import "_icons.html" as icons %}
   <header>
     <div class="header-left">
       <h1>{{ icons.archive() }} Archives</h1>
     </div>
+    <div class="header-actions">
+      {% include "_filter_dropdown.html" %}
+    </div>
   </header>
 
-  {% include "_filter_dropdown.html" %}
+  <div class="page-scroll" id="page-scroll">
+    <form method="get" action="/archives" class="search-form">
+      <input type="hidden" name="category" value="{{ selected }}">
+      <input type="search" name="q" value="{{ search }}" placeholder="Rechercher un article...">
+      <button type="submit">Rechercher</button>
+      {% if search %}
+      <a class="clear-search" href="/archives?category={{ selected }}">&times; Effacer</a>
+      {% endif %}
+    </form>
 
-  <form method="get" action="/archives" class="search-form">
-    <input type="hidden" name="category" value="{{ selected }}">
-    <input type="search" name="q" value="{{ search }}" placeholder="Rechercher un article...">
-    <button type="submit">Rechercher</button>
-    {% if search %}
-    <a class="clear-search" href="/archives?category={{ selected }}">&times; Effacer</a>
-    {% endif %}
-  </form>
-
-  <div id="archives-results">
-    {% include "_archives_results.html" %}
+    <div id="archives-results">
+      {% include "_archives_results.html" %}
+    </div>
   </div>
 
   {% include "_folder_picker_modal.html" %}
@@ -41,7 +44,7 @@
         entries.forEach(function (entry) {
           if (entry.isIntersecting) loadMore(entry.target);
         });
-      }, { rootMargin: "600px" });
+      }, { root: document.getElementById("page-scroll"), rootMargin: "600px" });
 
       function bindLoadMore() {
         observer.disconnect();

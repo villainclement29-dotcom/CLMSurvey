@@ -1,6 +1,7 @@
 :root {
   color-scheme: light dark;
   --bottom-nav-height: 58px;
+  --shell-px: 2rem;
   --bg: #0f1115;
   --surface: #171a21;
   --surface-hover: #1d212a;
@@ -51,15 +52,39 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: "Times New Roman", Times, Georgia, serif;
+  /* Repli pour les pages sans coquille plein écran (ex. l'article), qui
+     gardent le défilement de document normal : sur un iPhone, ça évite
+     que le contenu commence sous l'encoche. */
+  padding-top: max(2rem, env(safe-area-inset-top));
 }
 
 /* Le padding généreux de 2rem mange trop d'espace utile sur un écran de
    téléphone (jusqu'à 64px perdus en largeur) : réduit sur mobile. Ne
-   s'applique pas à body.calendar-page, qui a déjà son propre padding
-   plus serré. */
+   s'applique pas aux pages en coquille plein écran (.app-shell,
+   .calendar-page), qui gèrent leur propre padding par section (voir plus
+   bas) via --shell-px. */
 @media (max-width: 480px) {
-  body:not(.calendar-page) { padding: 1.25rem 1rem; }
+  body:not(.calendar-page):not(.app-shell) { padding: 1.25rem 1rem; }
+  body.app-shell { --shell-px: 1rem; }
 }
+
+/* Coquille plein écran (page-scroll ci-dessous) : header et barre de
+   navigation en bas sont de vrais éléments fixes (colonne flex), jamais
+   affectés par le défilement du contenu — contrairement à un header
+   "sticky"/une barre "position:fixed", ça évite les artefacts connus de
+   WebKit iOS pendant un scroll rapide, et ça garantit qu'aucun espace
+   vide n'apparaît au-dessus/en dessous. */
+body.app-shell,
+body.calendar-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body.calendar-page { --shell-px: 1.5rem; }
 
 header {
   display: flex;
@@ -67,12 +92,9 @@ header {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 1rem;
-  position: sticky;
-  top: 0;
+  flex: 0 0 auto;
   background: var(--bg);
-  padding-block: 0.25rem;
-  z-index: 1;
+  padding: calc(1.1rem + env(safe-area-inset-top)) var(--shell-px) 0.85rem;
 }
 
 h1 { font-size: 1.25rem; margin: 0; }
@@ -82,6 +104,24 @@ h1 { font-size: 1.25rem; margin: 0; }
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+header.header-centered {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+header.header-centered h1 { text-align: center; }
+
+header.header-centered .header-actions { justify-self: end; }
+
+.page-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem var(--shell-px) 1.5rem;
+  box-sizing: border-box;
 }
 
 button {
@@ -110,13 +150,6 @@ button {
 }
 
 .date-heading:first-of-type { margin-top: 0; }
-
-.date-heading-note {
-  text-transform: none;
-  font-weight: 400;
-  letter-spacing: normal;
-  opacity: 0.75;
-}
 
 .items {
   list-style: none;
@@ -500,23 +533,15 @@ button {
 
 .icon-only-btn[data-subscribed="1"] { color: var(--accent); border-color: var(--accent); }
 
-/* Page calendrier : container plein écran (hauteur de la fenêtre visible),
-   pour que le slider jour par jour occupe tout l'espace restant sous le
-   header et le bandeau de dates — important sur mobile, où c'est la
-   principale surface de l'app. Scopé à cette page via body.calendar-page :
-   les autres pages gardent leur mise en page normale (scroll de page). */
-body.calendar-page {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
-  padding: 1.25rem 1.5rem calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
-  box-sizing: border-box;
-}
-
-body.calendar-page header,
-body.calendar-page .date-strip-header {
+/* Page calendrier : le slider jour par jour occupe tout l'espace restant
+   sous le header et le bandeau de dates (voir la coquille plein écran
+   body.app-shell/.calendar-page définie plus haut). */
+.date-strip-header {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem var(--shell-px) 0.6rem;
 }
 
 body.calendar-page #day-view,
@@ -525,16 +550,11 @@ body.calendar-page #month-view {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  padding: 0 var(--shell-px);
+  box-sizing: border-box;
 }
 
 .day-title { flex: 0 0 auto; }
-
-.date-strip-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.9rem 0 0.6rem;
-}
 
 .date-strip-month {
   flex-shrink: 0;
@@ -610,7 +630,7 @@ body.calendar-page #month-view {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   border-top: 1px solid var(--border);
-  margin: 0 -1.5rem;
+  margin: 0 calc(-1 * var(--shell-px));
 }
 
 .day-panel {
@@ -619,7 +639,7 @@ body.calendar-page #month-view {
   max-width: 100%;
   scroll-snap-align: start;
   box-sizing: border-box;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem var(--shell-px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -893,6 +913,8 @@ body.calendar-page #month-view {
   margin-bottom: 1.75rem;
 }
 
+.header-actions .filter-bar { margin-bottom: 0; }
+
 .filter-toggle-btn {
   display: inline-flex;
   align-items: center;
@@ -977,22 +999,19 @@ body.calendar-page #month-view {
 .share-toast.visible { opacity: 1; }
 
 /* Barre de navigation en bas (remplace l'ancien menu burger latéral —
-   plus adaptée à une vraie app iPhone). Fixe, visible sur toutes les
-   pages principales (pas sur la page article, qui a son propre bouton
-   retour). Le contenu des pages concernées réserve l'espace nécessaire
-   via body.has-bottom-nav / body.calendar-page. */
+   plus adaptée à une vraie app iPhone). Vrai élément de la colonne flex
+   (body.app-shell/.calendar-page), pas un overlay position:fixed : ça
+   évite les artefacts connus de WebKit iOS où un élément fixed peut
+   sauter/clignoter pendant un scroll rapide, et garantit qu'elle reste
+   toujours au même endroit, jamais recouverte par le contenu qui défile
+   dans .page-scroll à côté d'elle. Absente sur la page article, qui a
+   son propre bouton retour. */
 .bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
+  flex: 0 0 auto;
   display: flex;
-  max-width: 900px;
-  margin-inline: auto;
+  width: 100%;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  border-inline: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -1013,13 +1032,3 @@ body.calendar-page #month-view {
 .bottom-nav-link .icon-svg { width: 1.3rem; height: 1.3rem; }
 
 .bottom-nav-link.active { color: var(--accent); }
-
-body.has-bottom-nav {
-  padding-bottom: calc(2rem + var(--bottom-nav-height) + env(safe-area-inset-bottom));
-}
-
-@media (max-width: 480px) {
-  body.has-bottom-nav {
-    padding-bottom: calc(1.25rem + var(--bottom-nav-height) + env(safe-area-inset-bottom));
-  }
-}

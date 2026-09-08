@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Veille scientifique</title>
   {# style.css est chargé en non-bloquant ici : le splash (voir
      _intro_splash.html, autonome, sans dépendance à ce fichier) sert de
@@ -19,41 +19,38 @@
     }
   </script>
 </head>
-<body class="has-bottom-nav">
+<body class="app-shell">
   {% include "_intro_splash.html" %}
-  <header>
-    <div class="header-left">
-      <h1>Veille scientifique</h1>
+  <header class="header-centered">
+    <div class="header-left"></div>
+    <h1>Veille scientifique</h1>
+    <div class="header-actions">
+      {% include "_filter_dropdown.html" %}
     </div>
   </header>
 
-  {% if refreshed is not none %}
-  <p class="flash">{{ refreshed }} nouvel(le/aux) article(s) ajouté(s).</p>
-  {% endif %}
-
-  {% include "_filter_dropdown.html" %}
-
-  {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
-  <h2 class="date-heading">
-    Aujourd'hui
-    {% if total_today > items|length %}
-    <span class="date-heading-note">— {{ items|length }} les plus pertinents sur {{ total_today }}</span>
+  <div class="page-scroll">
+    {% if refreshed is not none %}
+    <p class="flash">{{ refreshed }} nouvel(le/aux) article(s) ajouté(s).</p>
     {% endif %}
-  </h2>
 
-  {% if items %}
-  <ul class="items">
-    {% for item in items %}
-    {% include "_item_card.html" %}
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="empty">
-    Aucun article pertinent aujourd'hui pour l'instant.
-    {% if total_today %}({{ total_today }} écarté(s) comme peu pertinent(s)){% endif %}
-    Consultez les <a href="/archives">archives</a> en attendant la prochaine collecte.
-  </p>
-  {% endif %}
+    {% set next_url = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
+    <h2 class="date-heading">Aujourd'hui</h2>
+
+    {% if items %}
+    <ul class="items">
+      {% for item in items %}
+      {% include "_item_card.html" %}
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">
+      Aucun article pertinent aujourd'hui pour l'instant.
+      {% if total_today %}({{ total_today }} écarté(s) comme peu pertinent(s)){% endif %}
+      Consultez les <a href="/archives">archives</a> en attendant la prochaine collecte.
+    </p>
+    {% endif %}
+  </div>
   {% include "_folder_picker_modal.html" %}
   {% include "_share_toast.html" %}
   {% include "_bottom_nav.html" %}
